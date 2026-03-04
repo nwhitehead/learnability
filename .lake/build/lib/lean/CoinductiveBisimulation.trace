@@ -1,8 +1,8 @@
 {"synthetic": false,
  "schemaVersion": "2025-09-10",
  "outputs":
- {"o": ["05c0e9bc72004278.olean"],
-  "i": "f40093d5536aea85.ilean",
+ {"o": ["e5eead2b7245a4b7.olean"],
+  "i": "3383f68d5a8f7fd1.ilean",
   "c": "0f36c17b3fd95da7.c"},
  "log":
  [{"message":
@@ -24,9 +24,9 @@
   ["Lean 4.27.0, commit db93fe1608548721853390a10cd40580fe7d22ae",
    "9a2be90fd35343e5"],
   ["/Users/heartpunk/code/learnability/CoinductiveBisimulation.lean",
-   "2f13b41fe4555965"],
+   "9d4e3118c4895a18"],
   ["options",
    [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
     ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
   ["Module.leanArgs: #[]", "00000000000006bb"]],
- "depHash": "5780fb66536cc376"}
+ "depHash": "968e85a158cc8f2b"}

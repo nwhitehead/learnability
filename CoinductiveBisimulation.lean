@@ -3,20 +3,30 @@ import Learnability
 /-!
 # Coinductive Bisimulation via Learnability
 
-The projection relation induced by the learnability framework is a bisimulation.
+Capstone of the extraction story. `Learnability.lean` proves that a sound oracle
+yields a simulation-equivalent projected model; this file upgrades the result to
+**bisimulation** when the oracle is also complete. The file is 127 lines because
+no new math is needed — the coinductive proof obligation (show the relation is
+preserved by one step) reduces to three theorem applications from
+`Learnability.lean`:
 
-Key insight: the same oracle soundness/completeness properties that power the
-inductive fixpoint proof also directly witness the one-step matching property
-needed for bisimulation. The "coinductive" proof obligation reduces to:
-projection commutes with transitions.
+- `relevantProjectedOracle_sound` — forward: every implementation step has a
+  matching projected oracle step.
+- `extractionDims_deproject` — backward: every projected oracle step is
+  witnessed by a real implementation step. Uses injectivity (which holds at the
+  extraction fixpoint) and completeness.
+- `relevant_closed` — threading: relevant states are closed under behavior, so
+  the projection relation stays within the relevant fragment at each step.
 
-Forward direction: oracle soundness gives grammar matches for implementation steps.
-Backward direction: extractionDims_deproject gives implementation matches for grammar steps.
-Relevance threading: relevant_closed ensures the projection relation is closed under steps.
+LTS terminology (bisimulation, simulation) is appropriate here even though
+`Learnability.lean` is careful about generality. Bisimulation is inherently an
+LTS concept — this file is where the general framework meets the LTS world.
 
-The witness for any bisimulation step is always constructive: take one more
-implementation step, project the result. That's the witness. All the work was
-already done by the learnability framework.
+**Connection to `ConditionalSimulation.lean`:** that file establishes *forward*
+simulation from oracle soundness alone (no completeness needed). This file
+establishes *bisimulation* by adding the backward direction, which requires the
+complete oracle (`LearnabilityPreconditionsComplete`). The two files cover the
+sound-only and sound+complete cases respectively.
 -/
 
 set_option autoImplicit false
@@ -89,10 +99,16 @@ theorem projectionRelation_isBisimulation
 
 /-! ## Bisimilarity as Greatest Fixpoint
 
-In the absence of native coinductive propositions (Lean 4 uses inductive types),
-bisimilarity is defined relationally as the union of all bisimulations.
-This is the standard Milner construction and is equivalent to the coinductive
-greatest fixpoint in classical logic.
+Bisimilarity is defined relationally as the union of all bisimulations — the
+standard Milner construction, equivalent to the coinductive greatest fixpoint
+in classical logic.
+
+Lean 4 does have native `coinductive` predicates (via `Lean.Elab.Coinductive`,
+elaborated through partial fixpoint machinery). The Milner construction was
+originally chosen under the incorrect belief that `coinductive` was not
+available. It works fine — but a coinductive encoding may be cleaner. Open
+questions: how `coinductive` interacts with the relevance guard (`lp.relevant s`)
+and with `open Classical`.
 -/
 
 /-- Two states are bisimilar if they are related by some bisimulation. -/
