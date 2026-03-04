@@ -1,18 +1,18 @@
 {"synthetic": false,
  "schemaVersion": "2025-09-10",
  "outputs":
- {"o": ["7ce29372cd5a60db.olean"],
-  "i": "e094c830e0463be4.ilean",
+ {"o": ["fe5f8f5af5ea1f19.olean"],
+  "i": "cfce51dea20d26b1.ilean",
   "c": "22bf62f4920616aa.c"},
  "log":
  [{"message":
    ".> LEAN_PATH=/Users/heartpunk/.lake-shared/packages/Cli/.lake/build/lib/lean:/Users/heartpunk/.lake-shared/packages/batteries/.lake/build/lib/lean:/Users/heartpunk/.lake-shared/packages/Qq/.lake/build/lib/lean:/Users/heartpunk/.lake-shared/packages/aesop/.lake/build/lib/lean:/Users/heartpunk/.lake-shared/packages/proofwidgets/.lake/build/lib/lean:/Users/heartpunk/.lake-shared/packages/importGraph/.lake/build/lib/lean:/Users/heartpunk/.lake-shared/packages/LeanSearchClient/.lake/build/lib/lean:/Users/heartpunk/.lake-shared/packages/plausible/.lake/build/lib/lean:/Users/heartpunk/.lake-shared/packages/mathlib/.lake/build/lib/lean:/Users/heartpunk/code/learnability/.lake/build/lib/lean /Users/heartpunk/.elan/toolchains/leanprover--lean4---v4.27.0/bin/lean /Users/heartpunk/code/learnability/Learnability.lean -o /Users/heartpunk/code/learnability/.lake/build/lib/lean/Learnability.olean -i /Users/heartpunk/code/learnability/.lake/build/lib/lean/Learnability.ilean -c /Users/heartpunk/code/learnability/.lake/build/ir/Learnability.c --setup /Users/heartpunk/code/learnability/.lake/build/ir/Learnability.setup.json --json",
    "level": "trace"},
   {"message":
-   "Learnability.lean:728:9: unused variable `X`\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "Learnability.lean:734:9: unused variable `X`\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
    "level": "warning"},
   {"message":
-   "Learnability.lean:913:9: unused variable `X`\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
+   "Learnability.lean:919:9: unused variable `X`\n\nNote: This linter can be disabled with `set_option linter.unusedVariables false`",
    "level": "warning"}],
  "inputs":
  [["Learnability:deps",
@@ -39,9 +39,9 @@
       ["module plugins", "00000000000006bb"]]]]],
   ["Lean 4.27.0, commit db93fe1608548721853390a10cd40580fe7d22ae",
    "9a2be90fd35343e5"],
-  ["/Users/heartpunk/code/learnability/Learnability.lean", "c374ed8363f62ca9"],
+  ["/Users/heartpunk/code/learnability/Learnability.lean", "995d17abafe629d0"],
   ["options",
    [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
     ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
   ["Module.leanArgs: #[]", "00000000000006bb"]],
- "depHash": "4e0289cdc6e028c6"}
+ "depHash": "9f3a184ae678b818"}

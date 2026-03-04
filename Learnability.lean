@@ -415,10 +415,16 @@ theorem Function.iterate_stable' {α : Type*}
     rw [← Function.iterate_succ_apply' f n a]
     exact h_fix.symm
 
-/-! ## Main Learnability Theorems -/
+/-! ## Main Learnability Theorems
+
+The central result is `extraction_exists`: given an `ObservableSystem` with
+identifiable observations and a sound oracle, iterative refinement produces a
+dimension set at which the projected oracle is sound and all behavior is
+controllable. Everything else in this file either builds toward this theorem
+or extends it (complete oracle, named constructions, certificates). -/
 
 open Classical in
-/-- Main learnability theorem: any system satisfying the 5 preconditions
+/-- Main learnability theorem: any system satisfying the three preconditions
     admits an identifiable projected model.
 
     "Identifiable" means: at the fixpoint tracked dimensions X*,
