@@ -4,25 +4,222 @@ import Mathlib.Data.Fintype.Basic
 import Mathlib.Data.Fintype.Card
 
 /-!
-# Learnability Preconditions
+# The Learnability Framework
 
-Standalone formalization of the five structural preconditions sufficient
-for extracting an identifiable projected model of any observable system via
-iterative refinement.
+General framework for extracting faithful behavioral models from arbitrary
+observable systems via iterative dimension refinement. **This file imports
+only Mathlib** — it is independent of `LTS.lean`, `ConditionalSimulation.lean`,
+and `Convergence.lean`. The `behavior : State → Label → State → Prop` field
+does not require an LTS interpretation.
 
-These preconditions — finiteness, enumerability, identifiability,
-separability, and extractibility — are sufficient for automatically
-extracting an identifiable model of any aspect of language semantics
-expressible as State → Label → State → Prop, provided the
-preconditions can be instantiated — which may be non-trivial
-for domains beyond operational semantics.
+## The Core Claim
 
-Context-free grammars, structured control flow, and labeled transition
-systems are specific instantiations, not requirements of the framework
-itself.
+Any system with (1) finite behavioral structure, (2) identifiable observations,
+and (3) a sound oracle admits faithful extraction of a projected behavioral model
+via iterative refinement. With a sound oracle the extracted model is
+simulation-equivalent to the original over relevant states; with a complete
+oracle the relationship upgrades to bisimulation.
 
-This file imports ONLY Mathlib. It is independent of all other project
-modules.
+"Finite behavioral structure" means the observation space is finite —
+`[Fintype Dim]`. This does NOT mean finitely many states. A terminal emulator
+has an infinite state space (the screen buffer), but finitely many behavioral
+distinctions (the escape sequence parser operates over finitely many modes and
+control characters). `[Fintype Dim]` bounds the observation space, not the
+system's reachable state space.
+
+## Three Explicit Preconditions (Plus One Implicit)
+
+The Lean types capture three explicit preconditions:
+
+**1. Finite behavioral structure**: `[Fintype Dim]` — the observation space has
+finitely many dimensions. Combined with `[DecidableEq Dim]`, this makes
+`refineStep` compute a well-defined `Finset` and ensures
+`inflationary_stabilizes_bound` terminates in at most `Fintype.card Dim`
+iterations.
+
+**2. Identifiability**: `identifiable` — the observation function
+`observe : State → Dim → Value` distinguishes all relevant states. Two states
+with identical observations across all dimensions must be the same state. In
+practice this is near-trivial for concrete computational objects: for any
+`DecidableEq State`, using the identity as the observation function satisfies
+identifiability. The interesting question is not whether identifiability holds
+but which dimensions are *needed* — that is what `refineStep` discovers.
+
+**3. Sound oracle**: `oracle` + `sound` — every real behavior `behavior s ℓ s'`
+has an oracle witness `oracle ℓ s s'`. In the symex instantiation, KLEE (or
+similar) plays this role: symbolic execution discovers path conditions, yielding
+oracle witnesses for all reachable behaviors. This is the non-trivial precondition
+in practice — building the oracle requires engineering.
+
+**Fourth implicit precondition (not in the Lean types): Effective observability.**
+The oracle must be *productive*: given an incorrect candidate dimension set X,
+the oracle finds a distinguishing witness pair rather than returning ⊥ forever.
+In the OGIS framework (Jha & Seshia, *Acta Informatica* 2018), this is the
+"productive q_ce oracle" property — a counterexample query oracle that eventually
+returns a counterexample on incorrect hypotheses, even though it may return ⊥ on
+any individual query. Symbolic execution is naturally a q_ce oracle (sound but
+partial: may time out or exhaust paths). Effective observability holds when:
+- The implementation has a reducible control-flow graph (standard for C;
+  necessary for program dependence graph construction)
+- Decision points have thin semantic backward slices — branch conditions depend on
+  few variables, making path conditions tractable
+- Path conditions fall in a decidable theory (QF_BV for bitvectors, decidable via
+  SAT; linear arithmetic also decidable; nonlinear integer arithmetic is not)
+
+The Lean types say `noncomputable` + `Classical` for `refineStep` and
+`extractionDims` precisely because effective observability is not yet formalized:
+classical logic witnesses the existence of distinguishing pairs without
+constructing them. Formalizing when the oracle is productive is an open problem —
+it is what this research program is working toward.
+
+## Controllability and Separability Are Derived, Not Assumed
+
+Two properties that might look like additional preconditions are in fact
+*consequences* of the fixpoint:
+
+- **Controllability**: states with the same projection have the same behavior
+  availability (`extraction_exists` proves this at the fixpoint).
+- **Injectivity** (separability): the projection is injective on relevant states
+  (`exact_extraction`, `extractionDims_injective` — complete oracle case only).
+
+The fixpoint argument for controllability: if two relevant states have the same
+X-projection but different behavior availability, `refineStep` would add a
+distinguishing dimension — contradicting fixpoint. These properties emerge from
+identifiability + fixpoint; they are not inputs.
+
+## Refinement Mechanics
+
+`refineStep sys X` produces the next dimension set by adding every dimension `d`
+that witnesses a non-controllability disagreement at the current projection X:
+
+```
+X ∪ {d | ∃ s₁ s₂ ℓ, relevant s₁ ∧ s₁ can take ℓ ∧
+                    s₂ has the same X-projection as s₁ ∧
+                    s₂ cannot take ℓ ∧
+                    s₁ and s₂ differ at d}
+```
+
+Path-condition reading: "find two situations the current model conflates (same
+X-projection) but that behave differently (one can take ℓ, the other cannot), and
+add the dimension that distinguishes them." Each added dimension corresponds to a
+path condition separating these states.
+
+Non-circularity: the oracle witnesses are drawn from actual `State` values, not
+from the projected `Dim → Value` space. What dimensions matter is discovered
+from the full state space, independent of which dimensions X currently tracks.
+
+## Convergence and Complexity
+
+`inflationary_stabilizes_bound` proves that `refineStep` terminates in at most
+`Fintype.card Dim` iterations: the operator is inflationary (only adds dimensions),
+and the cardinality strictly increases with each non-fixpoint step, bounded by
+`|Dim|`. Translated to oracle calls: extraction costs O(|Dim| × oracle_cost).
+
+**Finding a fixpoint is tractable. Finding the *minimum* fixpoint is NP-hard.**
+
+The dimension set `extractionDims` is *a* faithful fixpoint — not necessarily the
+minimum one. Every tracked dimension has a concrete certificate of necessity
+(`extractionDims_each_dim_witnessed`): it was added because specific states
+(s₁, s₂) and label ℓ demonstrated its necessity at some refinement step k. But a
+smaller fixpoint may exist that also distinguishes all relevant behaviors.
+
+This is not a deficiency — it is provably optimal *not* to claim minimality.
+Finding the minimum faithful dimension set is NP-hard by reduction from minimum
+set cover (Jha & Seshia 2018, Theorem 6.1). Behavioral distinctions map to the
+elements to be covered; dimensions map to sets; a minimum faithful dimension set
+is a minimum cover. `refineStep` finds a valid fixpoint greedily, not an optimal
+one.
+
+The number of refinement iterations is lower-bounded by the teaching dimension TD
+of the concept class (Goldman & Kearns 1995; Jha & Seshia Theorem 6.2: M_OGIS ≥
+TD). Together with `inflationary_stabilizes_bound`:
+
+```
+TD(concept class) ≤ actual iterations ≤ Fintype.card Dim
+```
+
+## Two Extraction Modes
+
+**Sound oracle only — `LearnabilityPreconditions`:** Yields soundness and
+controllability at the fixpoint. In the LTS instantiation (via
+`ConditionalSimulation.lean`), this gives forward simulation: G' simulates H_I
+over relevant states.
+
+**Complete oracle — `LearnabilityPreconditionsComplete`:** Additionally requires
+`complete` (oracle witness → real behavior) and `relevant_closed` (behavior
+preserves relevance). Uses `refineStepComplete`, which adds dimensions both for
+non-controllability disagreements and for relevant-state observation disagreements.
+At this fixpoint, the projection is injective on relevant states. Combined with
+`relevantProjectedOracle` and `extractionDims_deproject`, this gives the reverse
+simulation direction, assembling to bisimulation. See `CoinductiveBisimulation.lean`
+for the assembled proof.
+
+## Seven Target Domains
+
+The framework handles any `behavior : State → Label → State → Prop` — the fields
+need not represent state transitions:
+
+1. **Operational semantics** (LTS): clean fit. `behavior = step`,
+   `relevant = Reachable`. Path conditions from symex separate control-flow
+   distinctions directly. This is the primary instantiation in the project.
+
+2. **Parsing / recursive descent parsers**: `behavior` captures parse derivations.
+   The implementation complexity (stack manipulation, lookahead) hides the grammar
+   structure that `refineStep` recovers.
+
+3. **Terminal emulation**: escape sequence processing as an LTS. Infinite screen
+   state space, finitely many escape sequence modes — `[Fintype Dim]` captures the
+   finite behavioral structure.
+
+4. **Type systems**: `behavior` captures typing judgments (Γ ⊢ e : τ), not state
+   transitions. Finitely many type rules and context shapes give `[Fintype Dim]`.
+   No initial state — judgments stand alone. `relevant` filters to well-formed pairs.
+
+5. **Effect systems**: `behavior` captures effect propagation constraints. Finitely
+   many effect annotations give `[Fintype Dim]`. Constraint propagation, not
+   transitions — `ObservableSystem` handles this because `behavior` is just a
+   relation on states.
+
+6. **Effect handler operational semantics**: a clean LTS — in contrast to #5,
+   which is not an LTS. The effect annotation system and its operational semantics
+   live in different categories despite describing the same language feature.
+
+7. **Module systems / namespace resolution**: binding and resolution relations.
+   Less developed as a target domain.
+
+The non-LTS examples (#4, #5) sharpen the generality claim. `ObservableSystem`'s
+`behavior : State → Label → State → Prop` doesn't care whether the relation
+represents transitions, judgments, or constraint propagation.
+
+**Framework power is proportional to implementation opacity.** When the behavior
+structure is directly readable from the binary, no extraction is needed. When the
+grammar or semantics is buried in control flow — as in recursive descent parsers
+or terminal emulators — `refineStep` pays for itself.
+
+## Relation to Convergence.lean and ConditionalSimulation.lean
+
+Those files implement the same technique for the specific LTS case:
+`CoRefinementProcess` iterates dimension refinement operationally, and
+`simulation_at_coRefinement_fixpoint` gives the forward simulation result.
+The present file is more general (any `ObservableSystem`), more declarative
+(existence of a fixpoint rather than construction), and more complete (bisimulation
+via the complete oracle case). The two developments are parallel, not formally
+connected — bridging them is future work.
+
+## Structure of This File
+
+1. `ObservableSystem` — base structure: relevant states, behavior relation,
+   observation function
+2. `LearnabilityPreconditions` — identifiable + sound oracle
+3. Refinement machinery: `project`, `projectedOracle`, `refineStep`
+4. Monotone stabilization: self-contained proof of `inflationary_stabilizes_bound`
+5. `extraction_exists` — fixpoint gives soundness + controllability
+6. `extraction_with_projection` — names the extracted π and R explicitly
+7. `LearnabilityPreconditionsComplete` — adds `complete` + `relevant_closed`
+8. `exact_extraction` — complete oracle gives soundness + controllability + injectivity
+9. `relevantProjectedOracle`, `extractionDims_deproject` — enables reverse direction
+10. Named constructions: `extractionDims`, `extractionDims_each_dim_witnessed` —
+    makes the fixpoint concrete and certifies each dimension's necessity
 -/
 
 set_option autoImplicit false
