@@ -65,24 +65,31 @@ but which dimensions are *needed* — that is what `refineStep` discovers.
 
 **3. Sound oracle**: `oracle` + `sound` — every real behavior `behavior s ℓ s'`
 has an oracle witness `oracle ℓ s s'`. In the symex instantiation, KLEE (or
-similar) plays this role: symbolic execution discovers path conditions, yielding
-oracle witnesses for all reachable behaviors. This is the non-trivial precondition
-in practice — building the oracle requires engineering.
+similar) plays this role. Symbolic execution runs a program on symbolic inputs
+rather than concrete ones, exploring all execution paths and collecting the
+logical conditions (path conditions) under which each path is taken. This
+yields oracle witnesses for all reachable behaviors. This is the non-trivial
+precondition in practice — building the oracle requires engineering.
 
 **Fourth implicit precondition (not in the Lean types): Effective observability.**
 The oracle must be *productive*: given an incorrect candidate dimension set X,
 the oracle finds a distinguishing witness pair rather than returning ⊥ forever.
+
 In the OGIS framework (Jha & Seshia, *Acta Informatica* 2018), this is the
-"productive q_ce oracle" property — a counterexample query oracle that eventually
+"productive q_ce oracle" property: a counterexample query oracle that eventually
 returns a counterexample on incorrect hypotheses, even though it may return ⊥ on
-any individual query. Symbolic execution is naturally a q_ce oracle (sound but
-partial: may time out or exhaust paths). Effective observability holds when:
-- The implementation has a reducible control-flow graph (standard for C;
-  necessary for program dependence graph construction)
-- Decision points have thin semantic backward slices — branch conditions depend on
-  few variables, making path conditions tractable
-- Path conditions fall in a decidable theory (QF_BV for bitvectors, decidable via
-  SAT; linear arithmetic also decidable; nonlinear integer arithmetic is not)
+any individual query. Symbolic execution is naturally such an oracle — sound but
+partial (may time out or exhaust paths on any single query).
+
+Effective observability holds when three conditions align:
+
+- The implementation has a **reducible control-flow graph** (standard for
+  compiled C; necessary for program dependence graph construction).
+- Decision points have **thin semantic backward slices** — branch conditions
+  depend on few variables, making path conditions tractable.
+- Path conditions fall in a **decidable theory**: QF_BV (quantifier-free
+  bitvector arithmetic, decidable via SAT reduction), linear arithmetic
+  (also decidable), but not nonlinear integer arithmetic (undecidable).
 
 The Lean types say `noncomputable` + `Classical` for `refineStep` and
 `extractionDims` precisely because effective observability is not yet formalized:
