@@ -6,8 +6,9 @@ import Learnability
 Capstone of the extraction story. `Learnability.lean` proves that a sound oracle
 yields a simulation-equivalent projected model; this file upgrades the result to
 **bisimulation** when the oracle is also complete. The file is short because
-no new math is needed — the coinductive proof obligation (show the relation is
-preserved by one step) reduces to three theorem applications from
+no new math is needed — the coinductive proof obligation (if a property holds
+now and is preserved by every transition, then it holds at all future times)
+reduces to three theorem applications from
 `Learnability.lean`:
 
 - `relevantProjectedOracle_sound` — forward: every implementation step has a
@@ -100,8 +101,11 @@ theorem projectionRelation_isBisimulation
 /-! ## Bisimilarity as Greatest Fixpoint
 
 Bisimilarity is defined relationally as the union of all bisimulations — the
-standard Milner construction, equivalent to the coinductive greatest fixpoint
-in classical logic.
+standard Milner construction. The idea: define "bisimilar" as "related by
+*some* bisimulation R," then show that bisimilarity itself is a bisimulation
+(because the union of bisimulations is a bisimulation). This makes it the
+greatest fixpoint of the one-step matching operator — equivalent to the
+coinductive definition in classical logic.
 
 Lean 4 does have native `coinductive` predicates (via `Lean.Elab.Coinductive`,
 elaborated through partial fixpoint machinery). The Milner construction was
