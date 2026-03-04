@@ -15,7 +15,7 @@
        [["@learnability:extraDep", "00000000000006bb"]]],
       ["imports",
        [["Learnability transitive imports (legacy)", "5293b6f60d91c6cb"],
-        ["Learnability:importAllArts", "1099bdcf90765c74"]]]]],
+        ["Learnability:importAllArts", "3bb87d2f522049fe"]]]]],
     ["libs",
      [["import dynlibs", "00000000000006bb"],
       ["package external libraries", "00000000000006bb"],
@@ -29,4 +29,4 @@
    [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
     ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
   ["Module.leanArgs: #[]", "00000000000006bb"]],
- "depHash": "e43cdd19411d1d8c"}
+ "depHash": "c2ddb7a5a4adc105"}

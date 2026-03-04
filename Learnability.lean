@@ -221,7 +221,7 @@ open Classical in
 /-- Main learnability theorem: any system satisfying the 5 preconditions
     admits an identifiable projected model.
 
-    "Faithful" means: at the fixpoint tracked dimensions X*,
+    "Identifiable" means: at the fixpoint tracked dimensions X*,
     (1) the projected oracle is sound for all relevant behaviors, and
     (2) all behavior of relevant states is controllable — if two states
         have the same projection, they have the same behavior availability.
