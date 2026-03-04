@@ -252,8 +252,9 @@ structure ObservableSystem (State Label Dim Value : Type*)
 
 /-! ## Learnability Preconditions
 
-Five preconditions sufficient for extraction, bundled
-as a Lean structure extending ObservableSystem.
+Three explicit preconditions bundled as a Lean structure extending
+ObservableSystem. See the module docstring for the full precondition
+analysis including the implicit fourth (effective observability).
 -/
 
 /-- Learnability preconditions for semantic extraction.
@@ -261,23 +262,22 @@ as a Lean structure extending ObservableSystem.
     Any observable system satisfying these conditions admits extraction
     of an identifiable projected model via iterative refinement.
 
-    The five preconditions:
-    1. **Finiteness**: `[Fintype Dim]` — observation space is finite
-    2. **Enumerability**: `[Fintype Dim]` gives `Finset.univ` — dimensions
-       can be iterated. In practice, grammar conformance provides
-       enumerability of behavioral categories (one template per rule).
-    3. **Identifiability**: `identifiable` — observations distinguish relevant states
-    4. **Separability**: (proved, not assumed) — at the refinement fixpoint,
-       the projection captures all relevant distinctions
-    5. **Extractibility**: `oracle` + `sound` — a sound oracle witnesses behavior
+    Three explicit preconditions:
+    1. **Finite behavioral structure**: `[Fintype Dim]` — the observation
+       space is finite (typeclass, not a field — shared with `ObservableSystem`)
+    2. **Identifiability**: `identifiable` — observations distinguish
+       relevant states (injective on relevant states, unconstrained on s₂)
+    3. **Sound oracle**: `oracle` + `sound` — every real behavior has an
+       oracle witness
+
+    Controllability (same projection → same behavior availability) and
+    injectivity (projection injective on relevant states) are *derived*
+    at the refinement fixpoint, not assumed. See `extraction_exists` and
+    `exact_extraction`.
 
     The abstract statement covers any system expressible as
     State → Label → State → Prop; instantiating the preconditions
-    for domains beyond operational semantics may be non-trivial.
-
-    Grammar conformance, structured control flow, and context-free grammars
-    are sufficient conditions for these properties in the LTS case, not
-    the properties themselves. -/
+    for domains beyond operational semantics may be non-trivial. -/
 structure LearnabilityPreconditions
     (State Label Dim Value : Type*)
     [DecidableEq Dim] [Fintype Dim] [Inhabited Value]
@@ -287,7 +287,7 @@ structure LearnabilityPreconditions
       among ALL states (s₂ unconstrained). -/
   identifiable : ∀ (s₁ s₂ : State), relevant s₁ →
     (∀ d, observe s₁ d = observe s₂ d) → s₁ = s₂
-  /-- Extractibility: a sound oracle for the system's behavior -/
+  /-- Sound oracle for the system's behavior -/
   oracle : Label → State → State → Prop
   /-- Oracle soundness: every real behavior has an oracle witness -/
   sound : ∀ (s s' : State) (ℓ : Label), behavior s ℓ s' → oracle ℓ s s'
