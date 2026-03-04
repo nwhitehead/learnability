@@ -7,10 +7,79 @@ import Mathlib.Data.Fintype.Card
 /-!
 # Convergence
 
-Convergence of iterative dimension refinement. Pure math (monotone finset
-stabilization, iterate fixpoints) plus the CoRefinementProcess structure
-that models the operational iteration. At fixpoint: oracle is sound,
-non-controllable transitions are invisible, simulation holds.
+Convergence of iterative dimension refinement. Three layers:
+
+1. **Pure math engine** (`Finset.monotone_stabilizes`, `Function.iterate_stable`):
+   a monotone increasing sequence of finsets over a finite type must eventually
+   stabilize. Bounded cardinality + strict growth → contradiction. This is the
+   arithmetic that makes everything terminate.
+
+2. **Co-refinement convergence** (`DimInflationary`, `dimRefinement_converges`):
+   the refinement step only adds dimensions, never removes. The pure-math layer
+   instantiated for our setting.
+
+3. **Co-refinement process + fixpoint** (`IsCoRefinementFixpoint`,
+   `CoRefinementProcess`, `yields_fixpoint`, `yields_simulation`): the semantic
+   content. At the stabilized dimension set, the oracle is sound and non-controllable
+   transitions are invisible. End-to-end: the oracle LTS simulates H_I.
+
+## The carving metaphor
+
+The dimension set X starts coarse — perhaps empty, tracking nothing. The oracle,
+operating at the full Σ level, discovers that two host states the current X
+conflates actually behave differently: they take different transitions, or project
+to different targets under different labels. It adds the distinguishing dimension
+to X, splitting the equivalence class.
+
+Each iteration, the classes get finer (never coarser — DimInflationary). At
+fixpoint: the oracle can no longer find any behavioral distinction that X misses.
+
+## Non-circularity
+
+The oracle O operates at the full host-state Σ level, independent of what X
+currently tracks. When O discovers that two situations behave differently, that
+discovery doesn't depend on how X currently partitions the state space — O sees
+all of Σ. Only the *output* (the extracted G') depends on X. The oracle doesn't
+need a better projection to notice that the current projection is wrong.
+
+## What the fixpoint establishes
+
+`IsCoRefinementFixpoint` captures two properties:
+- `sound`: `OracleSoundFor` — every concrete reachable step appears in R.
+- `non_controllable_preserves`: non-X-controllable transitions preserve π.
+
+A third, `branches_complete`, is a corollary of soundness alone: given
+`H_I.step σ ℓ σ'`, soundness gives `R ℓ (π σ) (π σ')`, witnessing `∃ x', R ℓ (π σ) x'`.
+The branch point and controllability hypotheses in `branches_complete` are
+underscore-prefixed — they are not used.
+
+`non_controllable_preserves` is not the same as `ProjectionUniform` from
+`ConditionalSimulation.lean`. They address complementary aspects:
+`non_controllable_preserves` — non-controllable transitions are invisible to G'
+(taking the step doesn't change the projection);
+`ProjectionUniform` — all preimages of a projected state agree on what (ℓ, x')
+pairs they can take (uniformity of controllable behavior across the fiber).
+
+## What this file does NOT establish
+
+`yields_simulation` gives only forward simulation: the oracle LTS matches each
+concrete step with a guest step. Bisimulation would additionally require
+`OracleRealizableFor` (every oracle claim witnessed by some concrete step) and
+`ProjectionUniform` (uniformity across preimages). Neither is an axiom of
+`CoRefinementProcess` as currently defined.
+
+The bisimulation result lives in the `Learnability.lean` →
+`CoinductiveBisimulation.lean` chain, which operates at a higher abstraction level
+(arbitrary behavior relations, not just LTSes). The two chains developed in
+parallel; the connection between them is not yet formalized.
+
+## Connection to ConditionalSimulation.lean
+
+This file earns the oracle conditions that `ConditionalSimulation.lean` uses.
+`simulation_at_coRefinement_fixpoint` is a one-liner — it calls
+`simulation_of_sound_oracle` directly, passing `h_fix.sound : OracleSoundFor H_I π R`.
+All the work is in earning `OracleSoundFor` via the refinement process; the
+simulation result then follows immediately from `ConditionalSimulation.lean`.
 -/
 
 /-! ## Monotone Finset Stabilization
@@ -125,8 +194,8 @@ A third property — **branch completeness** (every X-controllable branch
 at a reachable branch point is in R's domain) — follows from soundness
 alone: given any concrete step, soundness provides the R witness.
 
-Together these ensure the extracted LTS faithfully represents H_I's
-behavior at the granularity captured by π.
+Together these ensure the oracle LTS accurately models H_I's forward behavior
+at the granularity captured by π. (For bisimulation, see the module docstring.)
 -/
 
 /-- The co-refinement process has reached a fixpoint: the oracle is sound

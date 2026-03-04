@@ -1,8 +1,8 @@
 {"synthetic": false,
  "schemaVersion": "2025-09-10",
  "outputs":
- {"o": ["fbecccc8e2948860.olean"],
-  "i": "ff6cd2a52fa5c19d.ilean",
+ {"o": ["69add677f6456382.olean"],
+  "i": "a48cf4aeec49735a.ilean",
   "c": "bddf7f90fd64a259.c"},
  "log":
  [{"message":
@@ -36,9 +36,9 @@
       ["module plugins", "00000000000006bb"]]]]],
   ["Lean 4.27.0, commit db93fe1608548721853390a10cd40580fe7d22ae",
    "9a2be90fd35343e5"],
-  ["/Users/heartpunk/code/learnability/Convergence.lean", "1ad0c172eb766726"],
+  ["/Users/heartpunk/code/learnability/Convergence.lean", "43f2adbf22d2c0f1"],
   ["options",
    [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
     ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
   ["Module.leanArgs: #[]", "00000000000006bb"]],
- "depHash": "6752b4619795baca"}
+ "depHash": "c4eccfad08c6b3ec"}
