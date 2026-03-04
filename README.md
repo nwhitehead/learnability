@@ -1,6 +1,6 @@
 # Learnability
 
-Imagine you're reverse-engineering a C program that parses JSON. The program's internal state has hundreds of variables, but the JSON grammar only cares about a few — "am I inside a string?", "what's the current nesting depth?" This framework automatically discovers which variables matter by finding pairs of program states that look the same to your current model but behave differently. Each time it finds such a pair, it adds the distinguishing variable to the model. When it can't find any more such pairs, your model is faithful.
+Imagine you're reverse-engineering a C program that parses JSON. The program has hundreds of internal states, but the JSON grammar only needs a handful of behavioral distinctions. This framework automatically discovers which distinctions matter by finding pairs of states that your current model conflates but that behave differently. Each such pair refines the model. When no more distinguishing pairs exist, the model is faithful.
 
 This is a Lean 4 formalization of that idea: extracting faithful behavioral models from observable systems via iterative dimension refinement. The central theorem (`extraction_exists` in `Learnability.lean`) proves that any system with finite behavioral structure, identifiable observations, and a sound oracle admits faithful extraction. 0 sorries.
 
