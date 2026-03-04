@@ -217,9 +217,12 @@ connected — bridging them is future work.
 6. `extraction_with_projection` — names the extracted π and R explicitly
 7. `LearnabilityPreconditionsComplete` — adds `complete` + `relevant_closed`
 8. `exact_extraction` — complete oracle gives soundness + controllability + injectivity
-9. `relevantProjectedOracle`, `extractionDims_deproject` — enables reverse direction
-10. Named constructions: `extractionDims`, `extractionDims_each_dim_witnessed` —
-    makes the fixpoint concrete and certifies each dimension's necessity
+9. `relevantProjectedOracle`, `relevantProjectedOracle_witness_eq` —
+   relevance-restricted oracle enabling reverse direction
+10. Named constructions (sound-only): `extractionDims`,
+    `extractionDims_each_dim_witnessed` — concrete fixpoint with certificates
+11. Named constructions (complete): `refineStepComplete`, `extractionDims` (complete
+    case), `extractionDims_deproject`, `extractionDims_each_dim_witnessed` (complete)
 -/
 
 set_option autoImplicit false
