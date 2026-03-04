@@ -1,4 +1,10 @@
-/-
+import ConditionalSimulation
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Finset.Card
+import Mathlib.Data.Fintype.Basic
+import Mathlib.Data.Fintype.Card
+
+/-!
 # Convergence
 
 Convergence of iterative dimension refinement. Pure math (monotone finset
@@ -6,12 +12,6 @@ stabilization, iterate fixpoints) plus the CoRefinementProcess structure
 that models the operational iteration. At fixpoint: oracle is sound,
 non-controllable transitions are invisible, simulation holds.
 -/
-
-import ConditionalSimulation
-import Mathlib.Data.Finset.Basic
-import Mathlib.Data.Finset.Card
-import Mathlib.Data.Fintype.Basic
-import Mathlib.Data.Fintype.Card
 
 /-! ## Monotone Finset Stabilization
 

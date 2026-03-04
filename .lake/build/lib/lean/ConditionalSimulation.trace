@@ -1,7 +1,7 @@
 {"synthetic": false,
  "schemaVersion": "2025-09-10",
  "outputs":
- {"o": ["47821744b45f54a9.olean"],
+ {"o": ["1fa0358cbc6f5ffc.olean"],
   "i": "24f50d0d67b385a6.ilean",
   "c": "559e2a7480c6391a.c"},
  "log":
@@ -15,7 +15,7 @@
        [["@learnability:extraDep", "00000000000006bb"]]],
       ["imports",
        [["LTS transitive imports (legacy)", "5a3d5301ac935292"],
-        ["LTS:importAllArts", "18108f03d27d908f"]]]]],
+        ["LTS:importAllArts", "8a009ccb8008882c"]]]]],
     ["libs",
      [["import dynlibs", "00000000000006bb"],
       ["package external libraries", "00000000000006bb"],
@@ -24,9 +24,9 @@
   ["Lean 4.27.0, commit db93fe1608548721853390a10cd40580fe7d22ae",
    "9a2be90fd35343e5"],
   ["/Users/heartpunk/code/learnability/ConditionalSimulation.lean",
-   "0d8977c84f6e567c"],
+   "367fe26f808b0188"],
   ["options",
    [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
     ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
   ["Module.leanArgs: #[]", "00000000000006bb"]],
- "depHash": "b5f4564fcab52235"}
+ "depHash": "4cc4fa3655679de5"}

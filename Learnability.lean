@@ -1,4 +1,9 @@
-/-
+import Mathlib.Data.Finset.Basic
+import Mathlib.Data.Finset.Card
+import Mathlib.Data.Fintype.Basic
+import Mathlib.Data.Fintype.Card
+
+/-!
 # Learnability Preconditions
 
 Standalone formalization of the five structural preconditions sufficient
@@ -19,11 +24,6 @@ itself.
 This file imports ONLY Mathlib. It is independent of all other project
 modules.
 -/
-
-import Mathlib.Data.Finset.Basic
-import Mathlib.Data.Finset.Card
-import Mathlib.Data.Fintype.Basic
-import Mathlib.Data.Fintype.Card
 
 set_option autoImplicit false
 set_option relaxedAutoImplicit false

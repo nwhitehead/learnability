@@ -1,12 +1,12 @@
-/-
+import Mathlib.Logic.Relation
+
+/-!
 # Labeled Transition Systems
 
 General theory of labeled transition systems. Defines LTS, reachability,
 traces, branch points, simulation, and trace inclusion. No domain-specific
 content.
 -/
-
-import Mathlib.Logic.Relation
 
 /-! ## Labeled Transition Systems
 

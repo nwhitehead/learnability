@@ -1,4 +1,6 @@
-/-
+import Learnability
+
+/-!
 # Coinductive Bisimulation via Learnability
 
 The projection relation induced by the learnability framework is a bisimulation.
@@ -16,8 +18,6 @@ The witness for any bisimulation step is always constructive: take one more
 implementation step, project the result. That's the witness. All the work was
 already done by the learnability framework.
 -/
-
-import Learnability
 
 set_option autoImplicit false
 set_option relaxedAutoImplicit false

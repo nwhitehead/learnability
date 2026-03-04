@@ -1,7 +1,7 @@
 {"synthetic": false,
  "schemaVersion": "2025-09-10",
  "outputs":
- {"o": ["63fc1f28e4c9856d.olean"],
+ {"o": ["4e7a96ceff493d1d.olean"],
   "i": "3d74a49c1c084771.ilean",
   "c": "b1b4cf0db04c5254.c"},
  "log":
@@ -24,9 +24,9 @@
       ["module plugins", "00000000000006bb"]]]]],
   ["Lean 4.27.0, commit db93fe1608548721853390a10cd40580fe7d22ae",
    "9a2be90fd35343e5"],
-  ["/Users/heartpunk/code/learnability/LTS.lean", "7d84139bdc627c4a"],
+  ["/Users/heartpunk/code/learnability/LTS.lean", "ca29ff14ce8b48bf"],
   ["options",
    [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
     ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
   ["Module.leanArgs: #[]", "00000000000006bb"]],
- "depHash": "bee155e81ccbf3bc"}
+ "depHash": "4633e98cd0b30563"}

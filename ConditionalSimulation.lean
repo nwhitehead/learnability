@@ -1,4 +1,6 @@
-/-
+import LTS
+
+/-!
 # Conditional Simulation
 
 Conditional simulation: observing an LTS through a lossy projection and
@@ -8,8 +10,6 @@ soundness/completeness, branching oracles, and the core simulation
 theorems. The simulation is conditional on oracle properties — soundness
 gives forward simulation, completeness gives reverse simulation.
 -/
-
-import LTS
 
 /-! ## Projection
 

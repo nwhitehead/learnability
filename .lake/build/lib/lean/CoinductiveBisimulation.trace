@@ -1,7 +1,7 @@
 {"synthetic": false,
  "schemaVersion": "2025-09-10",
  "outputs":
- {"o": ["c003f037634c84eb.olean"],
+ {"o": ["05c0e9bc72004278.olean"],
   "i": "f40093d5536aea85.ilean",
   "c": "0f36c17b3fd95da7.c"},
  "log":
@@ -15,7 +15,7 @@
        [["@learnability:extraDep", "00000000000006bb"]]],
       ["imports",
        [["Learnability transitive imports (legacy)", "5293b6f60d91c6cb"],
-        ["Learnability:importAllArts", "3bb87d2f522049fe"]]]]],
+        ["Learnability:importAllArts", "ecf89630bd07ebe6"]]]]],
     ["libs",
      [["import dynlibs", "00000000000006bb"],
       ["package external libraries", "00000000000006bb"],
@@ -24,9 +24,9 @@
   ["Lean 4.27.0, commit db93fe1608548721853390a10cd40580fe7d22ae",
    "9a2be90fd35343e5"],
   ["/Users/heartpunk/code/learnability/CoinductiveBisimulation.lean",
-   "7762153e10a113a0"],
+   "2f13b41fe4555965"],
   ["options",
    [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
     ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
   ["Module.leanArgs: #[]", "00000000000006bb"]],
- "depHash": "c2ddb7a5a4adc105"}
+ "depHash": "7af0cedce3366208"}

@@ -1,7 +1,7 @@
 {"synthetic": false,
  "schemaVersion": "2025-09-10",
  "outputs":
- {"o": ["e48c519a65bedf34.olean"],
+ {"o": ["199e99d44f949bc5.olean"],
   "i": "ff6cd2a52fa5c19d.ilean",
   "c": "bddf7f90fd64a259.c"},
  "log":
@@ -15,8 +15,8 @@
        [["@learnability:extraDep", "00000000000006bb"]]],
       ["imports",
        [["ConditionalSimulation transitive imports (legacy)",
-         "4d8e76d64a771ddd"],
-        ["ConditionalSimulation:importAllArts", "72950c40ecd13ccb"],
+         "6d599345ff0da77d"],
+        ["ConditionalSimulation:importAllArts", "a0eaeca88054f1ec"],
         ["Mathlib.Data.Finset.Basic transitive imports (legacy)",
          "732f38f1e4c71d79"],
         ["Mathlib.Data.Finset.Basic:importAllArts", "1ec6b155e2444648"],
@@ -36,9 +36,9 @@
       ["module plugins", "00000000000006bb"]]]]],
   ["Lean 4.27.0, commit db93fe1608548721853390a10cd40580fe7d22ae",
    "9a2be90fd35343e5"],
-  ["/Users/heartpunk/code/learnability/Convergence.lean", "02421c5503ccb42e"],
+  ["/Users/heartpunk/code/learnability/Convergence.lean", "1ad0c172eb766726"],
   ["options",
    [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
     ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
   ["Module.leanArgs: #[]", "00000000000006bb"]],
- "depHash": "613e953aee05c0cf"}
+ "depHash": "57b091c239cfba10"}
