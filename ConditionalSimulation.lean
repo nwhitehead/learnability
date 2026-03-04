@@ -22,6 +22,10 @@ transition relation exactly — R *is* the extracted operational semantics.
 
 ## The Galois connection: the central organizing idea
 
+A Galois connection is a pair of maps (α, γ) between two ordered sets forming a
+"best approximation" relationship: α(x) ≤ y if and only if x ≤ γ(y). Here the
+orders are set inclusion on step relations, and the maps are induced by π.
+
 `π` induces two natural maps on step relations:
 
 - **α(S)** `= {(π σ, ℓ, π σ') | (σ, ℓ, σ') ∈ S}` — abstraction: image under π
@@ -73,6 +77,10 @@ each dimension added to X corrects a pair of states with the same current
 projection that violate uniformity. At the fixpoint, no violation remains.
 
 ## Relation to IsXControllable
+
+These two definitions capture the same intuition at different strengths —
+both ask "does the projected state determine what happens?" but they differ
+in what "what happens" means:
 
 `IsXControllable` at `(s, ℓ)` says all `π`-equivalent states can take `ℓ`
 (to *some* target, unconstrained). `ProjectionUniform` is the global, stronger

@@ -1,8 +1,8 @@
 {"synthetic": false,
  "schemaVersion": "2025-09-10",
  "outputs":
- {"o": ["be7f2c21f5d7cc25.olean"],
-  "i": "9434878ad9074e3a.ilean",
+ {"o": ["8a8ef31cc4218109.olean"],
+  "i": "75a7a6117ce81bca.ilean",
   "c": "559e2a7480c6391a.c"},
  "log":
  [{"message":
@@ -24,9 +24,9 @@
   ["Lean 4.27.0, commit db93fe1608548721853390a10cd40580fe7d22ae",
    "9a2be90fd35343e5"],
   ["/Users/heartpunk/code/learnability/ConditionalSimulation.lean",
-   "cd17f802a608b9bd"],
+   "45cccd97ce12e016"],
   ["options",
    [["-DrelaxedAutoImplicit=false", "74a2b5546b55be80"],
     ["-DautoImplicit=false", "4a85acb881fd49d0"]]],
   ["Module.leanArgs: #[]", "00000000000006bb"]],
- "depHash": "30b1556e652dfce6"}
+ "depHash": "e54f4f180c2dfd64"}
