@@ -462,7 +462,6 @@ private theorem iterate_comm {α : Type*} (f : α → α) (n : ℕ) (x : α) :
 /-- The concrete behavior of `afterBody n` matches the "between iterations" semantics:
     starting from state s (which is already post-body), either exit or (continues holds,
     do body, recurse with up to n more post-body decisions). -/
-omit [DecidableEq Sub] [DecidableEq PC] in
 private theorem afterBody_behavior
     (summary : LoopSummary Sub PC State isa) (n : ℕ) (s s' : State) :
     CompTree.treeBehavior isa (afterBody isa summary n) s s' ↔
@@ -517,7 +516,6 @@ private theorem afterBody_behavior
 
     This closes finding #1: the guarded loop tree has sound+complete branches
     (from `guardedLoopDenot_sound_complete`) AND matches the concrete loop semantics. -/
-omit [DecidableEq Sub] [DecidableEq PC] in
 theorem guardedLoopTree_eq_boundedWhileBehavior
     (summary : LoopSummary Sub PC State isa) (bound : ℕ) (s s' : State) :
     CompTree.treeBehavior isa (guardedLoopTree isa summary bound) s s' ↔
@@ -637,3 +635,155 @@ theorem finite_effect_convergence
   exact ⟨a + (n - a) % (b - a), Finset.mem_range.mpr (h_bound n hn'), rfl⟩
 
 end FiniteConvergence
+
+
+/-! ## Stabilization Completeness
+
+When the guard-free branch set `loopBranchSet` stabilizes at step K, every
+concrete while loop execution completes within K iterations. This connects
+symbolic convergence to concrete termination: if no new symbolic branches
+appear after K unrollings, the concrete orbit must cycle within K steps.
+
+The proof:
+1. `boundedIter body (K+1)` reaches `bodyEffect^[K+1] s` (induction)
+2. Completeness gives a branch `b` witnessing this in `denot(boundedIter body (K+1))`
+3. Bridge + stabilization: `b` is already in `denot(boundedIter body K)`
+4. Soundness: `b` witnesses a transition in `treeBehavior(boundedIter body K)`
+5. Determinism: the reached state is `bodyEffect^[m] s` for some `m ≤ K`
+6. Periodicity: all future iterates equal some iterate in `0..K`
+7. Therefore any while loop exit within `K` steps. -/
+
+section StabilizationCompleteness
+
+variable {Sub PC State : Type*} [DecidableEq Sub] [DecidableEq PC]
+  (isa : SymbolicISA Sub PC State)
+
+
+/-- The bounded loop iteration reaches the n-th iterate of bodyEffect. -/
+private theorem boundedIter_reaches_iterate
+    (summary : LoopSummary Sub PC State isa) (n : ℕ) (s : State) :
+    CompTree.treeBehavior isa (.boundedIter summary.body n) s (summary.bodyEffect^[n] s) := by
+  induction n generalizing s with
+  | zero =>
+    simp only [CompTree.treeBehavior, skipBehavior, Function.iterate_zero, id]
+  | succ n ih =>
+    simp only [CompTree.treeBehavior, choiceBehavior, seqBehavior]
+    right
+    exact ⟨summary.bodyEffect s, (summary.bodyEffect_spec s _).mpr rfl,
+           ih (summary.bodyEffect s)⟩
+
+/-- Every output of `boundedIter body n` is `bodyEffect^[m] s` for some `m ≤ n`. -/
+private theorem boundedIter_deterministic
+    (summary : LoopSummary Sub PC State isa) (n : ℕ) (s s' : State)
+    (h : CompTree.treeBehavior isa (.boundedIter summary.body n) s s') :
+    ∃ m, m ≤ n ∧ s' = summary.bodyEffect^[m] s := by
+  induction n generalizing s with
+  | zero =>
+    simp only [CompTree.treeBehavior, skipBehavior] at h
+    exact ⟨0, le_refl 0, h⟩
+  | succ n ih =>
+    simp only [CompTree.treeBehavior, choiceBehavior, seqBehavior, skipBehavior] at h
+    rcases h with heq | ⟨t, hbody, hrest⟩
+    · exact ⟨0, Nat.zero_le _, heq⟩
+    · have hdet := (summary.bodyEffect_spec s t).mp hbody; subst hdet
+      obtain ⟨m', hm', heq'⟩ := ih (summary.bodyEffect s) hrest
+      exact ⟨m' + 1, by omega, heq'⟩
+
+/-- **Orbit repetition lemma.** If `loopBranchSet` stabilizes at K, then for every
+    initial state s, `bodyEffect^[K+1] s = bodyEffect^[m] s` for some `m ≤ K`.
+
+    Proof: completeness gives a branch for the (K+1)-step execution; the bridge +
+    stabilization places it in the K-step set; soundness + determinism extract the
+    earlier iterate. -/
+private theorem orbit_repetition
+    (summary : LoopSummary Sub PC State isa) (K : ℕ)
+    (h_stab : loopBranchSet isa summary K = loopBranchSet isa summary (K + 1))
+    (s : State) :
+    ∃ m, m ≤ K ∧ summary.bodyEffect^[K + 1] s = summary.bodyEffect^[m] s := by
+  -- Step 1: boundedIter(K+1) reaches bodyEffect^[K+1] s
+  have h_reach := boundedIter_reaches_iterate isa summary (K + 1) s
+  -- Step 2: completeness gives a witnessing branch
+  obtain ⟨b, hb_mem, hb_sat, hb_eval⟩ :=
+    CompTree.denot_complete isa (.boundedIter summary.body (K + 1)) s _ h_reach
+  -- Step 3: bridge + stabilization: b is in denot(boundedIter body K)
+  rw [Finset.mem_coe, ← loopBranchSet_eq_boundedIter_denot isa summary (K + 1),
+      ← h_stab, loopBranchSet_eq_boundedIter_denot isa summary K] at hb_mem
+  -- Step 4: soundness gives treeBehavior(boundedIter body K) s (eval_sub b.sub s)
+  have h_beh := CompTree.denot_sound isa (.boundedIter summary.body K) b
+    (Finset.mem_coe.mpr hb_mem) s hb_sat
+  -- Step 5: eval_sub b.sub s = bodyEffect^[K+1] s
+  rw [hb_eval] at h_beh
+  -- Step 6: determinism extracts the earlier iterate
+  obtain ⟨m, hm, heq⟩ := boundedIter_deterministic isa summary K s _ h_beh
+  exact ⟨m, hm, heq⟩
+
+/-- **Stabilization completeness.** If `loopBranchSet` stabilizes at step K,
+    then every concrete while loop execution (`whileBehavior`) completes within
+    K iterations (`boundedWhileBehavior`).
+
+    "If symbolic branches converge, the loop terminates within K iterations
+    for all reachable behaviors."
+
+    The argument: orbit repetition (from soundness + completeness + bridge)
+    gives periodicity of the concrete bodyEffect orbit. Any exit state after
+    K steps already appeared at some step ≤ K, and continues conditions at
+    earlier steps are inherited from the original execution. -/
+theorem stabilization_complete
+    (summary : LoopSummary Sub PC State isa) (K : ℕ)
+    (h_stab : loopBranchSet isa summary K = loopBranchSet isa summary (K + 1))
+    (s s' : State)
+    (h : whileBehavior isa summary s s') :
+    boundedWhileBehavior isa summary K s s' := by
+  obtain ⟨n, h_iter, h_conts, h_exits⟩ := h
+  simp only [iterateBody] at h_iter
+  -- h_iter : bodyEffect^[n] s = s'
+  by_cases hn : n ≤ K
+  · exact ⟨n, hn, h_iter, h_conts, h_exits⟩
+  · push_neg at hn  -- hn : K < n
+    -- Orbit repetition: bodyEffect^[K+1] s = bodyEffect^[m] s for some m ≤ K
+    obtain ⟨m, hm, h_rep⟩ := orbit_repetition isa summary K h_stab s
+    -- Periodicity setup
+    have p_pos : 0 < K + 1 - m := by omega
+    have h_periodic : summary.bodyEffect^[K + 1 - m] (summary.bodyEffect^[m] s) =
+        summary.bodyEffect^[m] s := by
+      have : summary.bodyEffect^[K + 1] s =
+          summary.bodyEffect^[K + 1 - m] (summary.bodyEffect^[m] s) := by
+        conv_lhs => rw [show K + 1 = (K + 1 - m) + m from by omega]
+        rw [Function.iterate_add, Function.comp_apply]
+      rw [← this, h_rep]
+    -- All iterates ≥ m reduce to iterates in m..K
+    have h_reduce : ∀ j, j ≥ m →
+        summary.bodyEffect^[j] s =
+        summary.bodyEffect^[m + (j - m) % (K + 1 - m)] s := by
+      intro j hj
+      have h1 : summary.bodyEffect^[j] s =
+          summary.bodyEffect^[j - m] (summary.bodyEffect^[m] s) := by
+        conv_lhs => rw [show j = (j - m) + m from by omega]
+        rw [Function.iterate_add, Function.comp_apply]
+      have h2 := iterate_mod_of_periodic p_pos h_periodic (j - m)
+      have h3 : summary.bodyEffect^[(j - m) % (K + 1 - m)] (summary.bodyEffect^[m] s) =
+          summary.bodyEffect^[m + (j - m) % (K + 1 - m)] s := by
+        conv_rhs =>
+          rw [show m + (j - m) % (K + 1 - m) = (j - m) % (K + 1 - m) + m from by omega]
+        rw [Function.iterate_add, Function.comp_apply]
+      rw [h1, h2, h3]
+    -- The reduced index m' is ≤ K
+    have h_bound : m + (n - m) % (K + 1 - m) ≤ K := by
+      have : (n - m) % (K + 1 - m) < K + 1 - m := Nat.mod_lt _ p_pos
+      omega
+    set m' := m + (n - m) % (K + 1 - m) with hm'_def
+    -- bodyEffect^[m'] s = bodyEffect^[n] s = s'
+    have h_eq : summary.bodyEffect^[m'] s = summary.bodyEffect^[n] s :=
+      (h_reduce n (by omega)).symm
+    refine ⟨m', h_bound, ?_, ?_, ?_⟩
+    · -- iterateBody m' s = s'
+      simp only [iterateBody]
+      exact h_eq.trans h_iter
+    · -- continues at intermediate states
+      intro k hk
+      exact h_conts k (by omega)
+    · -- exits at bodyEffect^[m'] s = bodyEffect^[n] s
+      rw [h_eq]
+      exact h_exits
+
+end StabilizationCompleteness
