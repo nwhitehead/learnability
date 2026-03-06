@@ -208,3 +208,105 @@ theorem pcEquiv_eval_sub {model : Finset (Branch Sub PC)}
     exact (h_equiv (isa.pc_lift b.sub φ) (pcClosure_closed isa model b hb φ hφ)).mpr h
 
 end PCEquiv
+
+
+/-! ## Step 4c: Abstract Transitions and Cross-System Bisimulation
+
+The abstract state space is the quotient of `State` by PC-equivalence.
+Abstract transitions are defined existentially via representatives —
+this avoids the `Quotient.lift₂` well-definedness obligation entirely.
+
+The bisimulation proof shows the quotient map mediates between
+concrete and abstract transitions. -/
+
+section AbstractSystem
+
+variable {Sub PC State : Type*} [DecidableEq PC] [Fintype PC]
+  (isa : SymbolicISA Sub PC State)
+
+/-- The abstract state space: quotient by PC-equivalence. -/
+noncomputable abbrev AbstractState (model : Finset (Branch Sub PC)) :=
+  Quotient (pcSetoid isa model)
+
+/-- Abstract transition: `[s₁] →_abs [s₂]` iff some representatives
+    are connected by a branch-induced transition. Defined existentially
+    to avoid `Quotient.lift₂`. -/
+def abstractBehavior (model : Finset (Branch Sub PC))
+    (q₁ q₂ : Quotient (pcSetoid isa model)) : Prop :=
+  ∃ s₁ s₂ : State,
+    Quotient.mk (pcSetoid isa model) s₁ = q₁ ∧
+    Quotient.mk (pcSetoid isa model) s₂ = q₂ ∧
+    branchBehavior isa (↑model : Set (Branch Sub PC)) s₁ s₂
+
+/-- Cross-system bisimulation: an abstraction map `abs` mediates between
+    a concrete and an abstract transition system. -/
+structure CrossBisimulation {CState AState : Type*}
+    (abs : CState → AState)
+    (concrete : CState → CState → Prop)
+    (abstract : AState → AState → Prop) : Prop where
+  forward : ∀ s s', concrete s s' → abstract (abs s) (abs s')
+  backward : ∀ s a', abstract (abs s) a' →
+    ∃ s', concrete s s' ∧ abs s' = a'
+
+/-- Forward direction: concrete transition → abstract transition. -/
+theorem quotient_forward (model : Finset (Branch Sub PC))
+    (behavior : State → State → Prop)
+    (h_complete : BranchModel.Complete isa (↑model : Set (Branch Sub PC)) behavior)
+    (s s' : State) (h : behavior s s') :
+    abstractBehavior isa model
+      (Quotient.mk (pcSetoid isa model) s)
+      (Quotient.mk (pcSetoid isa model) s') := by
+  obtain ⟨b, hb, hsat, heval⟩ := h_complete s s' h
+  exact ⟨s, s', rfl, rfl, ⟨b, hb, hsat, heval⟩⟩
+
+/-- Backward direction: abstract transition from `[s]` to `a'` implies
+    a concrete transition from `s` to some `s'` with `[s'] = a'`.
+
+    Given `abstractBehavior [s] a'`, we get witnesses `s₁, s₂` with
+    `[s₁] = [s]` (so `s ≈ s₁`), `[s₂] = a'`, and a branch `b` connecting them.
+    By congruence, `b` fires from `s` too (since `s ≈ s₁`).
+    By soundness, `behavior s (eval_sub b.sub s)`.
+    By congruence, `eval_sub b.sub s ≈ eval_sub b.sub s₁ = s₂`, so `[eval s] = a'`. -/
+theorem quotient_backward (model : Finset (Branch Sub PC))
+    (behavior : State → State → Prop)
+    (h_sound : BranchModel.Sound isa (↑model : Set (Branch Sub PC)) behavior)
+    (s : State) (a' : Quotient (pcSetoid isa model))
+    (h : abstractBehavior isa model (Quotient.mk (pcSetoid isa model) s) a') :
+    ∃ s', behavior s s' ∧ Quotient.mk (pcSetoid isa model) s' = a' := by
+  obtain ⟨s₁, s₂, h_eq1, h_eq2, b, hb, hsat1, heval⟩ := h
+  -- s ≈ s₁ (from [s] = [s₁])
+  have h_equiv : (pcSetoid isa model).r s s₁ :=
+    Quotient.exact h_eq1.symm
+  -- b fires from s (by congruence)
+  have h_fires_s : isa.satisfies s b.pc :=
+    pcEquiv_branch_fires isa (Finset.mem_coe.mp hb) (pcEquiv_symm isa h_equiv)
+      (hsat1)
+  -- behavior s (eval_sub b.sub s) by soundness
+  have h_beh : behavior s (isa.eval_sub b.sub s) :=
+    h_sound b hb s h_fires_s
+  -- eval_sub b.sub s ≈ eval_sub b.sub s₁ (by congruence)
+  have h_succ_equiv : (pcSetoid isa model).r
+      (isa.eval_sub b.sub s) (isa.eval_sub b.sub s₁) :=
+    pcEquiv_eval_sub isa (Finset.mem_coe.mp hb) h_equiv
+  -- eval_sub b.sub s₁ = s₂, so eval_sub b.sub s ≈ s₂
+  -- Therefore [eval_sub b.sub s] = [s₂] = a'
+  refine ⟨isa.eval_sub b.sub s, h_beh, ?_⟩
+  rw [← h_eq2]
+  apply Quotient.sound
+  show (pcSetoid isa model).r (isa.eval_sub b.sub s) s₂
+  rw [← heval]
+  exact h_succ_equiv
+
+/-- The quotient map is a cross-system bisimulation. -/
+theorem quotient_bisimulation (model : Finset (Branch Sub PC))
+    (behavior : State → State → Prop)
+    (h_sound : BranchModel.Sound isa (↑model : Set (Branch Sub PC)) behavior)
+    (h_complete : BranchModel.Complete isa (↑model : Set (Branch Sub PC)) behavior) :
+    CrossBisimulation
+      (Quotient.mk (pcSetoid isa model))
+      behavior
+      (abstractBehavior isa model) where
+  forward := quotient_forward isa model behavior h_complete
+  backward := quotient_backward isa model behavior h_sound
+
+end AbstractSystem
