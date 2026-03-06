@@ -183,9 +183,13 @@ theorem loopBranchSet_stable (summary : LoopSummary Sub PC State isa) (K : ℕ)
 
 /-- **Convergence theorem.**
 
-    If the branch set stabilizes at step K, it equals the branch set at K
-    for all subsequent steps. The stabilized set is the complete branch
-    model for the loop (up to the equivalence classes that cause stabilization).
+    If the guard-free branch set stabilizes at step K, it equals the branch
+    set at K for all subsequent steps. By `loopBranchSet_eq_boundedIter_denot`,
+    this is equivalently the stabilization of `denot(boundedIter body n)`.
+
+    Note: this is a statement about the guard-free `loopBranchSet`, not the
+    guarded `guardedLoopTree`. The bridge from stabilization here to
+    completeness for full `whileBehavior` is not yet formalized.
 
     The cardinality of the stabilized set depends on the program:
     - Worst case: (1 + B)^K (exponential, no branch collapsing)
