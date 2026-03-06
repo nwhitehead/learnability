@@ -1,6 +1,7 @@
 import Bisimulation
 import Mathlib.Data.Finset.Powerset
 import Mathlib.Data.Fintype.Basic
+import Mathlib.Data.Fintype.Card
 
 /-!
 # Quotient Bisimulation
@@ -224,10 +225,6 @@ section AbstractSystem
 variable {Sub PC State : Type*} [DecidableEq PC] [Fintype PC]
   (isa : SymbolicISA Sub PC State)
 
-/-- The abstract state space: quotient by PC-equivalence. -/
-noncomputable abbrev AbstractState (model : Finset (Branch Sub PC)) :=
-  Quotient (pcSetoid isa model)
-
 /-- Abstract transition: `[s₁] →_abs [s₂]` iff some representatives
     are connected by a branch-induced transition. Defined existentially
     to avoid `Quotient.lift₂`. -/
@@ -383,6 +380,34 @@ theorem quotientSignature_injective (model : Finset (Branch Sub PC)) :
   apply Quotient.sound
   exact equiv_of_pcSignature_eq isa h
 
+/-- Injection into the powerset of the closure (for the tight finiteness bound). -/
+noncomputable def quotientSignaturePow (model : Finset (Branch Sub PC)) :
+    Quotient (pcSetoid isa model) → ↥(pcClosure isa model).powerset :=
+  fun q => ⟨quotientSignature isa model q, Finset.mem_powerset.mpr (by
+    obtain ⟨s, rfl⟩ := Quotient.exists_rep q
+    exact Finset.filter_subset _ _)⟩
+
+theorem quotientSignaturePow_injective (model : Finset (Branch Sub PC)) :
+    Function.Injective (quotientSignaturePow isa model) := by
+  intro q₁ q₂ h
+  exact quotientSignature_injective isa model (congr_arg Subtype.val h)
+
+/-- The quotient has finitely many states (via injection into the closure's powerset). -/
+noncomputable instance abstractStateFintype (model : Finset (Branch Sub PC)) :
+    Fintype (Quotient (pcSetoid isa model)) :=
+  Fintype.ofInjective (quotientSignaturePow isa model)
+    (quotientSignaturePow_injective isa model)
+
+/-- The number of abstract states is at most `2^|pcClosure model|`. -/
+theorem abstractState_card_bound (model : Finset (Branch Sub PC)) :
+    Fintype.card (Quotient (pcSetoid isa model)) ≤ 2 ^ (pcClosure isa model).card := by
+  calc Fintype.card (Quotient (pcSetoid isa model))
+      ≤ Fintype.card ↥(pcClosure isa model).powerset :=
+        Fintype.card_le_of_injective (quotientSignaturePow isa model)
+          (quotientSignaturePow_injective isa model)
+    _ = (pcClosure isa model).powerset.card := Fintype.card_coe _
+    _ = 2 ^ (pcClosure isa model).card := Finset.card_powerset _
+
 end Finiteness
 
 
@@ -397,16 +422,17 @@ section EndToEnd
 
 variable {Sub PC State : Type*} [DecidableEq Sub] [DecidableEq PC] [Fintype PC]
 
-/-- End-to-end: oracle convergence yields a quotient bisimulation.
+/-- End-to-end: oracle convergence yields a finite quotient bisimulation.
 
     Given a productive, target-bounded oracle with a complete target:
     1. The oracle converges to a sound and complete model (Phase 2)
     2. The quotient by PC-equivalence is cross-bisimilar (Phase 4)
-    3. The abstract state space is finite (bounded by 2^|closure|)
+    3. The abstract state space has at most `2^|pcClosure|` states
 
     This IS the publishable result: "we extracted a finite abstract model." -/
 theorem quotientBisimulation
     (oracle : BranchOracle Sub PC State)
+    [h_dec : ∀ (s : State) (φ : PC), Decidable (oracle.isa.satisfies s φ)]
     (target : Finset (Branch Sub PC))
     (h_productive : oracle.Productive target)
     (h_bounded : oracle.TargetBounded target)
@@ -416,10 +442,13 @@ theorem quotientBisimulation
       CrossBisimulation
         (Quotient.mk (pcSetoid oracle.isa (oracleSequence oracle n)))
         oracle.behavior
-        (abstractBehavior oracle.isa (oracleSequence oracle n)) := by
+        (abstractBehavior oracle.isa (oracleSequence oracle n)) ∧
+      Fintype.card (Quotient (pcSetoid oracle.isa (oracleSequence oracle n))) ≤
+        2 ^ (pcClosure oracle.isa (oracleSequence oracle n)).card := by
   obtain ⟨n, h_le, h_sound, h_complete⟩ :=
     branchAccumulation_sound_and_complete oracle target h_productive h_bounded h_target_complete
-  exact ⟨n, h_le, quotient_bisimulation oracle.isa (oracleSequence oracle n) oracle.behavior
-    h_sound h_complete⟩
+  exact ⟨n, h_le,
+    quotient_bisimulation oracle.isa (oracleSequence oracle n) oracle.behavior h_sound h_complete,
+    abstractState_card_bound oracle.isa (oracleSequence oracle n)⟩
 
 end EndToEnd
