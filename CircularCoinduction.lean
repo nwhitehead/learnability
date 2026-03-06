@@ -256,6 +256,160 @@ theorem absorptive_card_bound (summary : LoopSummary Sub PC State isa)
 end LoopBranchSet
 
 
+/-! ## Bridge: loopBranchSet = denot (boundedIter body n)
+
+The guard-free `loopBranchSet` equals the symbolic denotation of
+`CompTree.boundedIter body n`. This connects the convergence machinery
+to the existing soundness/completeness theorems for CompTree.
+
+For the guarded while loop, we then compose with guard assertions. -/
+
+section LoopBranchSetBridge
+
+variable {Sub PC State : Type*} [DecidableEq Sub] [DecidableEq PC]
+  (isa : SymbolicISA Sub PC State)
+
+/-- Skip is always in the loop branch set. -/
+theorem skip_mem_loopBranchSet (summary : LoopSummary Sub PC State isa) (n : ℕ) :
+    Branch.skip isa ∈ loopBranchSet isa summary n := by
+  induction n with
+  | zero => simp [loopBranchSet]
+  | succ k ih => exact loopBranchSet_mono isa summary k ih
+
+/-- composeBranchFinsets is monotone in the second argument. -/
+theorem composeBranchFinsets_mono_right {State' : Type*}
+    (isa' : SymbolicISA Sub PC State')
+    (B₁ : Finset (Branch Sub PC)) {B₂ B₃ : Finset (Branch Sub PC)}
+    (h : B₂ ⊆ B₃) :
+    composeBranchFinsets isa' B₁ B₂ ⊆ composeBranchFinsets isa' B₁ B₃ := by
+  intro x hx
+  simp only [composeBranchFinsets, Finset.mem_biUnion, Finset.mem_image] at hx ⊢
+  obtain ⟨b₁, hb₁, b₂, hb₂, rfl⟩ := hx
+  exact ⟨b₁, hb₁, b₂, h hb₂, rfl⟩
+
+/-- The loop branch set is contained in {skip} ∪ compose(body, loopBranchSet n).
+    This captures the "self-similar" structure: every accumulated branch is
+    either skip or arises from composing body branches with previous results. -/
+theorem loopBranchSet_sub_skip_union_compose
+    (summary : LoopSummary Sub PC State isa) (n : ℕ) :
+    loopBranchSet isa summary n ⊆
+      {Branch.skip isa} ∪
+        composeBranchFinsets isa (CompTree.denot isa summary.body)
+          (loopBranchSet isa summary n) := by
+  induction n with
+  | zero =>
+    -- loopBranchSet 0 = {skip}, and {skip} ⊆ {skip} ∪ anything
+    intro x hx
+    exact Finset.mem_union.mpr (Or.inl hx)
+  | succ k ih =>
+    -- loopBranchSet (k+1) = loopBranchSet k ∪ compose(body, loopBranchSet k)
+    -- By IH: loopBranchSet k ⊆ {skip} ∪ compose(body, loopBranchSet k)
+    -- And compose(body, loopBranchSet k) ⊆ compose(body, loopBranchSet (k+1)) by monotonicity
+    intro x hx
+    show x ∈ {Branch.skip isa} ∪
+        composeBranchFinsets isa (CompTree.denot isa summary.body)
+          (loopBranchSet isa summary (k + 1))
+    have hx' : x ∈ loopBranchSet isa summary k ∪
+        composeBranchFinsets isa (CompTree.denot isa summary.body)
+          (loopBranchSet isa summary k) := hx
+    rcases Finset.mem_union.mp hx' with h_old | h_new
+    · -- x ∈ loopBranchSet k: by IH, x ∈ {skip} ∪ compose(body, loopBranchSet k)
+      have := ih h_old
+      rcases Finset.mem_union.mp this with h_skip | h_comp
+      · exact Finset.mem_union.mpr (Or.inl h_skip)
+      · exact Finset.mem_union.mpr (Or.inr
+          (composeBranchFinsets_mono_right isa _ (loopBranchSet_mono isa summary k) h_comp))
+    · -- x ∈ compose(body, loopBranchSet k): monotonicity lifts to loopBranchSet (k+1)
+      exact Finset.mem_union.mpr (Or.inr
+        (composeBranchFinsets_mono_right isa _ (loopBranchSet_mono isa summary k) h_new))
+
+/-- **Bridge theorem:** `loopBranchSet` equals the symbolic denotation of
+    `CompTree.boundedIter body n`.
+
+    This connects the convergence/stabilization/absorptivity results to the
+    existing soundness and completeness theorems for CompTree denotation. -/
+theorem loopBranchSet_eq_boundedIter_denot
+    (summary : LoopSummary Sub PC State isa) (n : ℕ) :
+    loopBranchSet isa summary n =
+      CompTree.denot isa (.boundedIter summary.body n) := by
+  induction n with
+  | zero =>
+    simp only [loopBranchSet, CompTree.denot]
+  | succ k ih =>
+    -- loopBranchSet (k+1) = loopBranchSet k ∪ compose(body, loopBranchSet k)
+    -- denot (boundedIter body (k+1)) = choiceBranchFinsets {skip} (compose(body, denot(boundedIter body k)))
+    -- By IH: loopBranchSet k = denot (boundedIter body k)
+    simp only [loopBranchSet, CompTree.denot, choiceBranchFinsets]
+    rw [← ih]
+    -- Goal: S ∪ compose(body, S) = {skip} ∪ compose(body, S)
+    -- where S = loopBranchSet k
+    ext x
+    constructor
+    · intro hx
+      rcases Finset.mem_union.mp hx with h_old | h_new
+      · have := loopBranchSet_sub_skip_union_compose isa summary k h_old
+        rcases Finset.mem_union.mp this with h_s | h_c
+        · exact Finset.mem_union.mpr (Or.inl h_s)
+        · exact Finset.mem_union.mpr (Or.inr h_c)
+      · exact Finset.mem_union.mpr (Or.inr h_new)
+    · intro hx
+      rcases Finset.mem_union.mp hx with h_skip | h_comp
+      · exact Finset.mem_union.mpr (Or.inl
+          (Finset.mem_singleton.mp h_skip ▸ skip_mem_loopBranchSet isa summary k))
+      · exact Finset.mem_union.mpr (Or.inr h_comp)
+
+end LoopBranchSetBridge
+
+
+/-! ## Guarded Loop Tree
+
+A `while continues { body }` with exit condition `exits`, bounded to n
+iterations, is the CompTree:
+- 0 iterations: `assert exits`
+- n+1: `choice (assert exits) (seq (assert continues) (seq body (recurse n)))` -/
+
+section GuardedLoopTree
+
+variable {Sub PC State : Type*} [DecidableEq Sub] [DecidableEq PC]
+  (isa : SymbolicISA Sub PC State)
+
+/-- The guarded while loop as a CompTree, bounded to at most n iterations.
+    Exit checks `exits`; continuation checks `continues` before each body execution. -/
+def guardedLoopTree (summary : LoopSummary Sub PC State isa) :
+    ℕ → CompTree Sub PC
+  | 0 => .assert summary.exits
+  | n + 1 => .choice
+      (.assert summary.exits)
+      (.seq (.assert summary.continues) (.seq summary.body (guardedLoopTree summary n)))
+
+/-- Symbolic denotation of the guarded loop tree. -/
+def guardedLoopDenot (summary : LoopSummary Sub PC State isa) (n : ℕ) :
+    Finset (Branch Sub PC) :=
+  CompTree.denot isa (guardedLoopTree isa summary n)
+
+/-- The guarded loop tree inherits soundness and completeness from CompTree.
+    Since `guardedLoopTree` is itself a CompTree, `denot_sound_complete` applies
+    directly. The bridge `loopBranchSet_eq_boundedIter_denot` connects the
+    convergence results to the unguarded body, and the guards are just CompTree
+    operations (assert, seq, choice) that the existing framework handles.
+
+    This means: to get a sound+complete branch model for a while loop bounded
+    to n iterations, use `guardedLoopDenot summary n` — the existing CompTree
+    soundness/completeness applies, and the convergence of the underlying
+    `loopBranchSet` bounds the growth. -/
+theorem guardedLoopDenot_sound_complete
+    (summary : LoopSummary Sub PC State isa) (n : ℕ) :
+    BranchModel.Sound isa
+      (↑(guardedLoopDenot isa summary n) : Set (Branch Sub PC))
+      (CompTree.treeBehavior isa (guardedLoopTree isa summary n)) ∧
+    BranchModel.Complete isa
+      (↑(guardedLoopDenot isa summary n) : Set (Branch Sub PC))
+      (CompTree.treeBehavior isa (guardedLoopTree isa summary n)) := by
+  exact CompTree.denot_sound_complete isa (guardedLoopTree isa summary n)
+
+end GuardedLoopTree
+
+
 /-! ## Finite State Convergence (Corollary)
 
 When the concrete state space is finite, stabilization is guaranteed by
