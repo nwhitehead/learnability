@@ -384,3 +384,42 @@ theorem quotientSignature_injective (model : Finset (Branch Sub PC)) :
   exact equiv_of_pcSignature_eq isa h
 
 end Finiteness
+
+
+/-! ## Step 4e: End-to-End Theorem
+
+Combining Phase 2 convergence with Phase 4 quotient bisimulation:
+a productive, target-bounded oracle with a complete target converges to
+a model whose quotient is a finite abstract system bisimilar to the
+concrete system. -/
+
+section EndToEnd
+
+variable {Sub PC State : Type*} [DecidableEq Sub] [DecidableEq PC] [Fintype PC]
+
+/-- End-to-end: oracle convergence yields a quotient bisimulation.
+
+    Given a productive, target-bounded oracle with a complete target:
+    1. The oracle converges to a sound and complete model (Phase 2)
+    2. The quotient by PC-equivalence is cross-bisimilar (Phase 4)
+    3. The abstract state space is finite (bounded by 2^|closure|)
+
+    This IS the publishable result: "we extracted a finite abstract model." -/
+theorem quotientBisimulation
+    (oracle : BranchOracle Sub PC State)
+    (target : Finset (Branch Sub PC))
+    (h_productive : oracle.Productive target)
+    (h_bounded : oracle.TargetBounded target)
+    (h_target_complete : BranchModel.Complete oracle.isa
+      (↑target : Set (Branch Sub PC)) oracle.behavior) :
+    ∃ n, n ≤ target.card ∧
+      CrossBisimulation
+        (Quotient.mk (pcSetoid oracle.isa (oracleSequence oracle n)))
+        oracle.behavior
+        (abstractBehavior oracle.isa (oracleSequence oracle n)) := by
+  obtain ⟨n, h_le, h_sound, h_complete⟩ :=
+    branchAccumulation_sound_and_complete oracle target h_productive h_bounded h_target_complete
+  exact ⟨n, h_le, quotient_bisimulation oracle.isa (oracleSequence oracle n) oracle.behavior
+    h_sound h_complete⟩
+
+end EndToEnd

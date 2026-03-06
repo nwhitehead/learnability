@@ -1,4 +1,4 @@
-import Bisimulation
+import Quotient
 import Mathlib.Tactic.FinCases
 import Mathlib.Data.Fintype.Pi
 
@@ -180,4 +180,26 @@ theorem exOracle_converges_bisimilar :
         (branchBehavior exISA (↑(oracleSequence exOracle n) : Set (Branch ExSub ExPC)))
         exBehavior :=
   branchAccumulation_bisimilar exOracle exTarget
+    exOracle_productive exOracle_bounded exTarget_complete
+
+
+/-! ## Quotient bisimulation smoke test
+
+The end-to-end quotient theorem applies to this concrete instance:
+the oracle converges and the quotient yields a finite abstract model
+cross-bisimilar to the concrete system. -/
+
+/-- Decidability of `exISA.satisfies` — needed for signature computation. -/
+instance exSatisfies_decidable : ∀ (s : ExState) (φ : ExPC), Decidable (exISA.satisfies s φ) :=
+  fun s φ => inferInstanceAs (Decidable (φ s = true))
+
+/-- The oracle converges to a model whose quotient is cross-bisimilar to
+    the concrete system. Smoke test for the full Phase 4 pipeline. -/
+theorem exOracle_quotient_bisimulation :
+    ∃ n, n ≤ exTarget.card ∧
+      CrossBisimulation
+        (Quotient.mk (pcSetoid exISA (oracleSequence exOracle n)))
+        exBehavior
+        (abstractBehavior exISA (oracleSequence exOracle n)) :=
+  quotientBisimulation exOracle exTarget
     exOracle_productive exOracle_bounded exTarget_complete
