@@ -680,6 +680,7 @@ private theorem boundedIter_reaches_iterate
     exact ⟨summary.bodyEffect s, (summary.bodyEffect_spec s _).mpr rfl,
            ih (summary.bodyEffect s)⟩
 
+omit [DecidableEq Sub] [DecidableEq PC] in
 /-- Every output of `boundedIter body n` is `bodyEffect^[m] s` for some `m ≤ n`. -/
 private theorem boundedIter_deterministic
     (summary : LoopSummary Sub PC State isa) (n : ℕ) (s s' : State)
