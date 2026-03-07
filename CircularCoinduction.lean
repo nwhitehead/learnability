@@ -71,6 +71,10 @@ structure LoopSummary (Sub PC State : Type*) (isa : SymbolicISA Sub PC State) wh
       holds iff `s' = bodyEffect s`. Encodes determinism — exactly one
       successor per state. -/
   bodyEffect_spec : ∀ s s', CompTree.treeBehavior isa body s s' ↔ s' = bodyEffect s
+  /-- Guard complementarity: if the loop continues, the exit condition does not hold.
+      This is the structural relationship between continue and exit guards —
+      they partition the post-body state space. -/
+  guard_complement : ∀ s, isa.satisfies s continues → isa.satisfies s (isa.pc_not exits)
 
 variable (isa : SymbolicISA Sub PC State)
 
