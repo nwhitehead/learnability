@@ -264,21 +264,4 @@ theorem denot_sound_complete (tree : CompTree Sub PC) :
 
 end SoundComplete
 
-/-! ## If-Then-Else Encoding
-
-Conditionals encode via choice + assert + pc_not. This is not a separate
-constructor — it's a derived form, matching ICTAC's treatment. -/
-
-section IfThenElse
-
-variable {Sub PC : Type*}
-
-/-- If-then-else as a derived CompTree.
-    `PIf b p₁ p₂ = PCh (PSeq (PGuard b) p₁) (PSeq (PGuard (BNot b)) p₂)`. -/
-def ite' (isa : SymbolicISA Sub PC State) (φ : PC)
-    (t₁ t₂ : CompTree Sub PC) : CompTree Sub PC :=
-  .choice (.seq (.assert φ) t₁) (.seq (.assert (isa.pc_not φ)) t₂)
-
-end IfThenElse
-
 end CompTree
