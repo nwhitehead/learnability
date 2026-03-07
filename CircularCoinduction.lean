@@ -399,8 +399,8 @@ variable {Sub PC State : Type*} [DecidableEq Sub] [DecidableEq PC]
 def afterBody (summary : LoopSummary Sub PC State isa) :
     ℕ → CompTree Sub PC
   | 0 => .assert summary.exits
-  | n + 1 => .choice
-      (.assert summary.exits)
+  | n + 1 => .guardedChoice summary.exits
+      .skip
       (.seq (.assert summary.continues) (.seq summary.body (afterBody summary n)))
 
 /-- The guarded while loop as a CompTree, bounded to at most n iterations.
@@ -485,11 +485,14 @@ private theorem afterBody_behavior
       have hm0 : m = 0 := by omega
       subst hm0; simp at heq; exact ⟨heq ▸ hext, heq.symm⟩
   | succ n ih =>
-    simp only [afterBody, CompTree.treeBehavior, choiceBehavior, assertBehavior, seqBehavior]
+    simp only [afterBody, CompTree.treeBehavior, choiceBehavior, assertBehavior,
+               seqBehavior, skipBehavior]
     constructor
-    · rintro (⟨hsat, heq⟩ | ⟨t₁, ⟨hcont, ht₁⟩, t₂, hbody, hafter⟩)
-      · exact ⟨0, Nat.zero_le _, heq.symm, fun k hk => by omega, heq ▸ hsat⟩
-      · subst ht₁
+    · rintro (⟨t₁, ⟨hsat, ht₁⟩, heq⟩ | ⟨_, ⟨_, hrfl⟩, t₁, ⟨hcont, ht₁⟩, t₂, hbody, hafter⟩)
+      · -- exit branch: seqBehavior (assertBehavior exits) skipBehavior
+        subst ht₁; exact ⟨0, Nat.zero_le _, heq.symm, fun k hk => by omega, heq ▸ hsat⟩
+      · -- continue branch: seqBehavior (assertBehavior (pc_not exits)) (seqBehavior (assertBehavior continues) ...)
+        subst hrfl; subst ht₁
         have hdet := (summary.bodyEffect_spec _ t₂).mp hbody; subst hdet
         rw [ih] at hafter
         obtain ⟨m', hm', heq', hconts', hext'⟩ := hafter
@@ -504,11 +507,16 @@ private theorem afterBody_behavior
         · rw [iterate_succ_apply']; exact hext'
     · rintro ⟨m, hm, heq, hconts, hext⟩
       cases m with
-      | zero => left; simp at heq; exact ⟨heq ▸ hext, heq.symm⟩
+      | zero =>
+        -- exit: produce seqBehavior (assertBehavior exits) skipBehavior
+        -- heq : s = s', need ⟨t, ⟨satisfies s exits, s = t⟩, s' = t⟩
+        left; simp at heq; exact ⟨s, ⟨heq ▸ hext, rfl⟩, heq.symm⟩
       | succ m' =>
+        -- continue: produce seqBehavior (assertBehavior (pc_not exits)) (seqBehavior (assertBehavior continues) ...)
         right
-        refine ⟨_, ⟨hconts 0 (by omega), rfl⟩, summary.bodyEffect _,
-                (summary.bodyEffect_spec s _).mpr rfl, ?_⟩
+        have hcont0 := hconts 0 (by omega)
+        refine ⟨s, ⟨summary.guard_complement s hcont0, rfl⟩, _, ⟨hcont0, rfl⟩,
+                summary.bodyEffect _, (summary.bodyEffect_spec s _).mpr rfl, ?_⟩
         rw [ih]
         refine ⟨m', by omega, ?_, ?_, ?_⟩
         · rw [iterate_succ_apply'] at heq; exact heq
