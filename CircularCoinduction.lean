@@ -665,6 +665,7 @@ variable {Sub PC State : Type*} [DecidableEq Sub] [DecidableEq PC]
   (isa : SymbolicISA Sub PC State)
 
 
+omit [DecidableEq Sub] [DecidableEq PC] in
 /-- The bounded loop iteration reaches the n-th iterate of bodyEffect. -/
 private theorem boundedIter_reaches_iterate
     (summary : LoopSummary Sub PC State isa) (n : ℕ) (s : State) :
