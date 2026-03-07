@@ -71,10 +71,11 @@ structure LoopSummary (Sub PC State : Type*) (isa : SymbolicISA Sub PC State) wh
       holds iff `s' = bodyEffect s`. Encodes determinism — exactly one
       successor per state. -/
   bodyEffect_spec : ∀ s s', CompTree.treeBehavior isa body s s' ↔ s' = bodyEffect s
-  /-- Guard complementarity: if the loop continues, the exit condition does not hold.
-      This is the structural relationship between continue and exit guards —
-      they partition the post-body state space. -/
-  guard_complement : ∀ s, isa.satisfies s continues → isa.satisfies s (isa.pc_not exits)
+  /-- Guard partition: continues and exits are complementary conditions.
+      `continues ↔ pc_not exits` captures both disjointness (continues → ¬exits)
+      and exhaustivity (¬exits → continues). In a standard while loop, the
+      continue condition IS the negation of the exit condition. -/
+  guard_partition : ∀ s, isa.satisfies s continues ↔ isa.satisfies s (isa.pc_not exits)
 
 variable (isa : SymbolicISA Sub PC State)
 
@@ -104,15 +105,15 @@ variable {Sub PC State : Type*} (isa : SymbolicISA Sub PC State)
 /-- The behavior of a while loop:
     `while continues { body }` relates s to s' when there exists
     some number of iterations n such that body executes n times,
-    `continues` holds after each intermediate iteration (but not the last),
+    `continues` holds before each iteration (at the pre-body state),
     and `exits` holds after the final iteration.
 
     For n = 0: just check exits at the initial state (zero iterations).
-    For n ≥ 1: continues holds at iterations 1..n-1, exits at iteration n. -/
+    For n ≥ 1: continues holds at iterations 0..n-1, exits at iteration n. -/
 def whileBehavior (summary : LoopSummary Sub PC State isa) : State → State → Prop :=
   fun s s' => ∃ n,
     (iterateBody isa summary n s = s') ∧
-    (∀ k, k + 1 < n → isa.satisfies (summary.bodyEffect^[k + 1] s) summary.continues) ∧
+    (∀ k, k < n → isa.satisfies (summary.bodyEffect^[k] s) summary.continues) ∧
     isa.satisfies (summary.bodyEffect^[n] s) summary.exits
 
 /-- A loop summary is **sound** when the body captures the one-step behavior
@@ -412,8 +413,8 @@ def afterBody (summary : LoopSummary Sub PC State isa) :
 def guardedLoopTree (summary : LoopSummary Sub PC State isa) :
     ℕ → CompTree Sub PC
   | 0 => .assert summary.exits
-  | n + 1 => .choice
-      (.assert summary.exits)
+  | n + 1 => .guardedChoice summary.exits
+      .skip
       (.seq summary.body (afterBody isa summary n))
 
 /-- Symbolic denotation of the guarded loop tree. -/
@@ -447,7 +448,7 @@ def boundedWhileBehavior (summary : LoopSummary Sub PC State isa) (bound : ℕ) 
     State → State → Prop :=
   fun s s' => ∃ n, n ≤ bound ∧
     (iterateBody isa summary n s = s') ∧
-    (∀ k, k + 1 < n → isa.satisfies (summary.bodyEffect^[k + 1] s) summary.continues) ∧
+    (∀ k, k < n → isa.satisfies (summary.bodyEffect^[k] s) summary.continues) ∧
     isa.satisfies (summary.bodyEffect^[n] s) summary.exits
 
 /-- `f^[n+1] x = f^[n] (f x)` — definitional from `Function.iterate`. -/
@@ -515,7 +516,7 @@ private theorem afterBody_behavior
         -- continue: produce seqBehavior (assertBehavior (pc_not exits)) (seqBehavior (assertBehavior continues) ...)
         right
         have hcont0 := hconts 0 (by omega)
-        refine ⟨s, ⟨summary.guard_complement s hcont0, rfl⟩, _, ⟨hcont0, rfl⟩,
+        refine ⟨s, ⟨(summary.guard_partition s).mp hcont0, rfl⟩, _, ⟨hcont0, rfl⟩,
                 summary.bodyEffect _, (summary.bodyEffect_spec s _).mpr rfl, ?_⟩
         rw [ih]
         refine ⟨m', by omega, ?_, ?_, ?_⟩
@@ -547,32 +548,46 @@ theorem guardedLoopTree_eq_boundedWhileBehavior
       subst hm0; simp at heq; exact ⟨heq ▸ hext, heq.symm⟩
   | succ n ih =>
     simp only [guardedLoopTree, CompTree.treeBehavior, choiceBehavior,
-               assertBehavior, seqBehavior, boundedWhileBehavior, iterateBody]
+               assertBehavior, seqBehavior, skipBehavior, boundedWhileBehavior, iterateBody]
     constructor
-    · rintro (⟨hsat, heq⟩ | ⟨t, hbody, hafter⟩)
-      · exact ⟨0, Nat.zero_le _, heq.symm, fun k hk => by omega, heq ▸ hsat⟩
-      · have hdet := (summary.bodyEffect_spec s t).mp hbody; subst hdet
+    · rintro (⟨t₁, ⟨hsat, ht₁⟩, heq⟩ | ⟨_, ⟨_, hrfl⟩, t, hbody, hafter⟩)
+      · -- exit branch: exits at s, s' = s
+        subst ht₁; exact ⟨0, Nat.zero_le _, heq.symm, fun k hk => by omega, heq ▸ hsat⟩
+      · -- continue branch: pc_not exits at s, then body, then afterBody
+        subst hrfl
+        rename_i h_not_exits
+        have hdet := (summary.bodyEffect_spec _ t).mp hbody; subst hdet
         rw [afterBody_behavior] at hafter
         obtain ⟨m', hm', heq', hconts', hext'⟩ := hafter
         refine ⟨m' + 1, by omega, ?_, ?_, ?_⟩
-        · -- bodyEffect^[m'+1] s = bodyEffect^[m'] (bodyEffect s) = s'
-          rw [iterate_succ_apply']; exact heq'
+        · rw [iterate_succ_apply']; exact heq'
         · intro k hk
-          -- k + 1 < m' + 1, so need satisfies at bodyEffect^[k+1] s
-          rw [iterate_succ_apply']
-          exact hconts' k (by omega)
+          cases k with
+          | zero =>
+            -- k = 0: need continues at s. We have pc_not exits at s (from guardedChoice).
+            -- guard_partition.mpr gives continues from pc_not exits.
+            exact (summary.guard_partition _).mpr h_not_exits
+          | succ k' =>
+            -- k = k'+1: need continues at bodyEffect^[k'+1] s = bodyEffect^[k'] (bodyEffect s)
+            rw [iterate_succ_apply']
+            exact hconts' k' (by omega)
         · rw [iterate_succ_apply']; exact hext'
     · rintro ⟨m, hm, heq, hconts, hext⟩
       cases m with
-      | zero => left; simp at heq; exact ⟨heq ▸ hext, heq.symm⟩
+      | zero =>
+        left; simp at heq; exact ⟨_, ⟨heq ▸ hext, rfl⟩, heq.symm⟩
       | succ m' =>
+        -- m'+1 iterations: continues at s (k=0), so pc_not exits at s
         right
-        refine ⟨summary.bodyEffect s, (summary.bodyEffect_spec s _).mpr rfl, ?_⟩
+        have hcont_s := hconts 0 (by omega)
+        simp at hcont_s
+        refine ⟨_, ⟨(summary.guard_partition _).mp hcont_s, rfl⟩,
+                summary.bodyEffect _, (summary.bodyEffect_spec _ _).mpr rfl, ?_⟩
         rw [afterBody_behavior]
         refine ⟨m', by omega, ?_, ?_, ?_⟩
         · rw [iterate_succ_apply'] at heq; exact heq
         · intro k hk
-          have := hconts k (by omega)
+          have := hconts (k + 1) (by omega)
           rw [iterate_succ_apply'] at this; exact this
         · rw [iterate_succ_apply'] at hext; exact hext
 
