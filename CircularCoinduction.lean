@@ -567,10 +567,15 @@ end GuardedLoopTree
 
 /-! ## Finite State Convergence (Corollary)
 
-When the concrete state space is finite, stabilization is guaranteed by
-pigeonhole. Provides one way to discharge the stabilization hypothesis,
-but the practical bound comes from domain knowledge (e.g., parser states),
-not state exhaustion. -/
+When the concrete state space is finite, pigeonhole guarantees that the
+concrete `bodyEffect` orbit eventually cycles (`finite_effect_convergence`).
+This is weaker than symbolic branch-set stabilization: it proves orbit
+periodicity of concrete iterates, not that `loopBranchSet` stabilizes.
+The connection from concrete orbit periodicity to symbolic stabilization
+is not yet formalized (finding #4).
+
+In practice, the stabilization bound comes from domain knowledge
+(e.g., parser states), not state exhaustion. -/
 
 section FiniteConvergence
 
