@@ -190,7 +190,7 @@ theorem loopBranchSet_stable (summary : LoopSummary Sub PC State isa) (K : ℕ)
 
     Note: this is a statement about the guard-free `loopBranchSet`, not the
     guarded `guardedLoopTree`. The bridge from stabilization here to
-    completeness for full `whileBehavior` is not yet formalized.
+    completeness for full `whileBehavior` is `stabilization_complete`.
 
     The cardinality of the stabilized set depends on the program:
     - Worst case: (1 + B)^K (exponential, no branch collapsing)
