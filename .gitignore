@@ -1,1 +1,3 @@
 .lake/build/
+tools/vex_ref/.venv/
+.uv-angr/
