@@ -17,6 +17,9 @@ rev = "v4.27.0"
 name = "LTS"
 
 [[lean_lib]]
+name = "Core"
+
+[[lean_lib]]
 name = "ConditionalSimulation"
 
 [[lean_lib]]
@@ -24,6 +27,9 @@ name = "Convergence"
 
 [[lean_lib]]
 name = "Learnability"
+
+[[lean_lib]]
+name = "SymExec"
 
 [[lean_lib]]
 name = "CoinductiveBisimulation"
@@ -51,6 +57,9 @@ name = "BranchExample"
 
 [[lean_lib]]
 name = "MachineISA"
+
+[[lean_lib]]
+name = "Instances"
 
 [[lean_lib]]
 name = "Composition"
