@@ -31,6 +31,7 @@ structure LinearStmtBridgeCase (stmt : LinearStmt) where
 structure BranchStmtBridgeCase (stmt : BranchStmt) where
   fires : ConcreteState × TempEnv → Bool
   taken : ConcreteState × TempEnv → ConcreteState
+  cont : ConcreteState × TempEnv → ConcreteState × TempEnv
   lowerGuard : PartialSummary → SymPC
   lowerTaken : PartialSummary → Summary
   lowerContinue : PartialSummary → PartialSummary
@@ -47,7 +48,7 @@ structure BranchStmtBridgeCase (stmt : BranchStmt) where
     ∀ input concrete ps,
       PartialSummaryMatches input concrete ps →
       fires concrete = false →
-      PartialSummaryMatches input concrete (lowerContinue ps)
+      PartialSummaryMatches input (cont concrete) (lowerContinue ps)
   taken_pc_implies_parent :
     ∀ ps input,
       Summary.enabled (lowerTaken ps) input →
@@ -177,6 +178,7 @@ private theorem applySymSub_write (sub : SymSub) (input : ConcreteState) (reg : 
   | .exit cond target =>
       { fires := fun concrete => evalCond concrete.1 concrete.2 cond
         taken := fun concrete => { concrete.1 with rip := target }
+        cont := fun concrete => concrete
         lowerGuard := fun ps => lowerCond ps.sub ps.temps cond
         lowerTaken := fun ps =>
           { sub := SymSub.write ps.sub .rip (.const target)
