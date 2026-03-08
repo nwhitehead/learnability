@@ -1,9 +1,14 @@
 import Instances.ISAs.VexModelEq
+import Instances.ISAs.VexSummaryISA
+import SymExec.CircularCoinduction
 
 set_option autoImplicit false
 set_option relaxedAutoImplicit false
 
 namespace VexISA
+
+abbrev VexLoopSummary (Reg : Type) [DecidableEq Reg] [Fintype Reg] :=
+  LoopSummary (SymSub Reg) (SymPC Reg) (ConcreteState Reg) (vexSummaryISA Reg)
 
 /-- An extensional subsystem region: just the relevant inputs, the observable projection,
     and the observed behavior the subsystem is meant to denote. -/
@@ -139,6 +144,22 @@ theorem extractedLoopModel_of_witnessComplete
           spec.DenotesObs s o :=
   extractedModel_of_witnessComplete (LoopRegion spec) (boundedLoopWitness body K) hcomplete
 
+/-- Concrete loop-region constructor that reuses the existing `whileBehavior`
+    semantics from `CircularCoinduction.lean`. -/
+def whileLoopRegionSpec
+    {Reg : Type} {Obs : Type} [DecidableEq Reg] [Fintype Reg]
+    (program : Program Reg) (ip_reg : Reg)
+    (summary : VexLoopSummary Reg)
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs) :
+    LoopRegionSpec Reg Obs where
+  program := program
+  ip_reg := ip_reg
+  Relevant := Relevant
+  observe := observe
+  DenotesObs := fun s o =>
+    Relevant s ∧ ∃ s', whileBehavior (isa := vexSummaryISA Reg) summary s s' ∧ observe s' = o
+
 /-- Soundness half of a bounded loop witness: every path in the witness family denotes
     a behavior already included in the extensional loop region. -/
 def LoopWitnessSound
@@ -161,6 +182,42 @@ def LoopUnrollBound
     spec.DenotesObs s o →
       ExecPathFamilyDenotesObs spec.Relevant spec.observe
         (boundedLoopWitness body K) s o
+
+/-- Specialized name for the exact coverage obligation induced by the concrete
+    while-based loop region. This is the hypothesis future stabilization and
+    finite-state theorems should discharge. -/
+abbrev WhileLoopUnrollBound
+    {Reg : Type} {Obs : Type} [DecidableEq Reg] [Fintype Reg]
+    (program : Program Reg) (ip_reg : Reg)
+    (summary : VexLoopSummary Reg)
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (body : List (Block Reg)) (K : Nat) : Prop :=
+  LoopUnrollBound (whileLoopRegionSpec program ip_reg summary Relevant observe) body K
+
+/-- Bounded while behavior is a special case of full while behavior. -/
+theorem boundedWhileBehavior_implies_whileBehavior
+    {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (summary : VexLoopSummary Reg) (K : Nat) {s s' : ConcreteState Reg} :
+    boundedWhileBehavior (isa := vexSummaryISA Reg) summary K s s' →
+      whileBehavior (isa := vexSummaryISA Reg) summary s s' := by
+  intro h
+  rcases h with ⟨n, _, hIter, hCont, hExit⟩
+  exact ⟨n, hIter, hCont, hExit⟩
+
+/-- Membership in the bounded loop witness is exactly repetition of the body path
+    some number of times up to the bound. -/
+theorem mem_boundedLoopWitness_iff
+    {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (body : List (Block Reg)) (K : Nat) (path : List (Block Reg)) :
+    path ∈ boundedLoopWitness body K ↔
+      ∃ n, n ≤ K ∧ repeatBlockPath body n = path := by
+  constructor
+  · intro h
+    rcases Finset.mem_image.mp h with ⟨n, hn, hEq⟩
+    exact ⟨n, Finset.mem_range_succ_iff.mp hn, hEq⟩
+  · rintro ⟨n, hn, rfl⟩
+    exact Finset.mem_image.mpr ⟨n, Finset.mem_range_succ_iff.mpr hn, rfl⟩
 
 /-- A bounded loop witness is complete exactly when it is both sound and covering for
     the extensional loop-region behavior. -/
