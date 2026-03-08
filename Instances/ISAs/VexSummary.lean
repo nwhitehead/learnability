@@ -309,4 +309,26 @@ theorem evalSymPC_subst {Reg : Type} [DecidableEq Reg] [Fintype Reg]
     simp [applySymSub, composeSymSub, evalSymExpr_subst]
   · simp [applySymSub, composeSymSub, evalSymMem_subst]
 
+@[simp] theorem Summary.compose_enabled_iff {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (left right : Summary Reg) (state : ConcreteState Reg) :
+    Summary.enabled (Summary.compose left right) state ↔
+      Summary.enabled left state ∧ Summary.enabled right (Summary.apply left state) := by
+  simp [Summary.enabled, Summary.compose, Summary.apply, satisfiesSymPC, evalSymPC_subst]
+
+@[simp] theorem Summary.compose_apply {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (left right : Summary Reg) (state : ConcreteState Reg) :
+    Summary.apply (Summary.compose left right) state =
+      Summary.apply right (Summary.apply left state) := by
+  simp [Summary.apply, Summary.compose, composeSymSub_apply]
+
+@[simp] theorem Summary.id_enabled {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (state : ConcreteState Reg) :
+    Summary.enabled (Summary.id : Summary Reg) state := by
+  simp [Summary.id, Summary.enabled, satisfiesSymPC]
+
+@[simp] theorem Summary.id_apply {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (state : ConcreteState Reg) :
+    Summary.apply (Summary.id : Summary Reg) state = state := by
+  simp [Summary.id, Summary.apply]
+
 end VexISA
