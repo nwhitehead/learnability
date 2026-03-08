@@ -118,4 +118,25 @@ theorem nil_mem_boundedLoopWitness
   · simp
   · simp [repeatBlockPath_zero]
 
+/-- A bounded loop witness is complete when its at-most-`K` path family covers exactly
+    the extensional behavior of the loop region. -/
+def LoopWitnessComplete
+    {Reg : Type} {Obs : Type} [DecidableEq Reg] [Fintype Reg]
+    (spec : LoopRegionSpec Reg Obs)
+    (body : List (Block Reg)) (K : Nat) : Prop :=
+  WitnessComplete (LoopRegion spec) (boundedLoopWitness body K)
+
+/-- Once a bounded loop witness is known to be complete, the extracted summary family is
+    immediately an adequate model of the loop region. -/
+theorem extractedLoopModel_of_witnessComplete
+    {Reg : Type} {Obs : Type} [DecidableEq Reg] [Fintype Reg]
+    (spec : LoopRegionSpec Reg Obs)
+    (body : List (Block Reg)) (K : Nat)
+    (hcomplete : LoopWitnessComplete spec body K) :
+    ∀ s o,
+      VexModelDenotesObs spec.Relevant spec.observe
+        (lowerPathFamilySummaries (boundedLoopWitness body K)) s o ↔
+          spec.DenotesObs s o :=
+  extractedModel_of_witnessComplete (LoopRegion spec) (boundedLoopWitness body K) hcomplete
+
  end VexISA
