@@ -1,5 +1,5 @@
-import Instances.ISAs.VexISA
-import Instances.ISAs.VexLowering
+import Instances.ISAs.VexConcrete
+import Instances.ISAs.VexLowerCore
 
 set_option autoImplicit false
 set_option relaxedAutoImplicit false
