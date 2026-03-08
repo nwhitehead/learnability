@@ -44,8 +44,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexLeaRdiPlus5Fixture
 
@@ -63,8 +62,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexLeaRaxRdiFixture
 
@@ -82,8 +80,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexLeaRaxRcxPlus5Fixture
 
@@ -101,8 +98,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexLeaRcxRdiPlus5Fixture
 
@@ -120,8 +116,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexLeaRaxRdiPlusRcxFixture
 
@@ -139,8 +134,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexLeaRaxRdiPlusRcxPlus8Fixture
 
@@ -158,8 +152,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexMovRcxRdiFixture
 
@@ -177,8 +170,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexMovRdiRcxFixture
 
@@ -196,8 +188,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexJrcxzSkipLeaTakenFixture
 
@@ -215,8 +206,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexJrcxzSkipLeaFallthroughFixture
 
@@ -234,8 +224,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexJrcxzSkipMovRaxRdiTakenFixture
 
@@ -253,8 +242,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexJrcxzSkipMovRaxRdiFallthroughFixture
 
@@ -272,8 +260,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexJrcxzSkipLeaRcxRdiPlus5TakenFixture
 
@@ -291,8 +278,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexJrcxzSkipLeaRcxRdiPlus5FallthroughFixture
 
@@ -310,8 +296,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexJrcxzSkipLeaRdiRdiPlus8TakenFixture
 
@@ -329,8 +314,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexJrcxzSkipLeaRdiRdiPlus8FallthroughFixture
 
@@ -348,8 +332,7 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexJrcxzSkipLeaRaxRdiPlusRcxTakenFixture
 
@@ -367,7 +350,6 @@ example (summary : Summary)
     (hMem : summary ∈ lowerBlockSummaries block)
     (hEnabled : Summary.enabled summary input) :
     Summary.apply summary input = expected := by
-  have hSucc := lowerBlockSummaries_complete block input summary hMem hEnabled
-  simpa [block, input, expected, execBlockSuccs, execStmtsSuccs, evalCond, evalExpr] using hSucc
+  exact lowerBlockSummaries_complete_eq_of_unique block input expected summary (by decide) hMem hEnabled
 
 end Instances.Examples.VexJrcxzSkipLeaRaxRdiPlusRcxFallthroughFixture

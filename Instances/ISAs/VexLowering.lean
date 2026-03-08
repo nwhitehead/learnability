@@ -1,4 +1,4 @@
-import Instances.ISAs.VexLowerCore
+import Instances.ISAs.VexBridgeCore
 
 set_option autoImplicit false
 set_option relaxedAutoImplicit false
@@ -6,14 +6,10 @@ set_option relaxedAutoImplicit false
 namespace VexISA
 
 def lowerStmt : LowerState → Stmt → LowerState
-  | (sub, temps), .linear (.wrTmp tmp expr) =>
-      (sub, SymTempEnv.write temps tmp (lowerExpr sub temps expr))
-  | (sub, temps), .linear (.put reg expr) =>
-      (SymSub.write sub reg (lowerExpr sub temps expr), temps)
-  | (sub, temps), .linear (.store64 addr value) =>
-      (SymSub.writeMem sub (.store64 sub.mem (lowerExpr sub temps addr) (lowerExpr sub temps value)), temps)
-  | (sub, temps), .branch (.exit _cond _target) =>
-      (sub, temps)
+  | state, .linear stmt =>
+      lowerLinearStmt state stmt
+  | state, .branch stmt =>
+      lowerBranchContinue state stmt
 
 def lowerStmts (stmts : List Stmt) : LowerState :=
   stmts.foldl lowerStmt (SymSub.id, SymTempEnv.empty)
@@ -28,26 +24,15 @@ def lowerBlock (block : Block) : Summary :=
 def lowerSummariesFrom (ps : PartialSummary) : List Stmt → UInt64 → List Summary
   | [], next =>
       [ps.finish next]
-  | .linear (.wrTmp tmp expr) :: stmts, next =>
+  | .linear stmt :: stmts, next =>
+      let lowered := lowerLinearStmt (ps.sub, ps.temps) stmt
       lowerSummariesFrom
-        { ps with temps := SymTempEnv.write ps.temps tmp (lowerExpr ps.sub ps.temps expr) }
+        { ps with sub := lowered.1, temps := lowered.2 }
         stmts next
-  | .linear (.put reg expr) :: stmts, next =>
-      lowerSummariesFrom
-        { ps with sub := SymSub.write ps.sub reg (lowerExpr ps.sub ps.temps expr) }
-        stmts next
-  | .linear (.store64 addr value) :: stmts, next =>
-      let mem := SymMem.store64 ps.sub.mem (lowerExpr ps.sub ps.temps addr) (lowerExpr ps.sub ps.temps value)
-      lowerSummariesFrom
-        { ps with sub := SymSub.writeMem ps.sub mem }
-        stmts next
-  | .branch (.exit cond target) :: stmts, next =>
-      let φ := lowerCond ps.sub ps.temps cond
-      { sub := SymSub.write ps.sub .rip (.const target)
-      , pc := .and ps.pc φ } ::
-      lowerSummariesFrom
-        { ps with pc := .and ps.pc (.not φ) }
-        stmts next
+  | .branch stmt :: stmts, next =>
+      let bridge := branchStmtBridge stmt
+      bridge.lowerTaken ps ::
+      lowerSummariesFrom (bridge.lowerContinue ps) stmts next
 
 def lowerBlockSummariesList (block : Block) : List Summary :=
   lowerSummariesFrom PartialSummary.init block.stmts block.next

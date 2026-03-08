@@ -1,4 +1,4 @@
-import Instances.ISAs.VexConcrete
+import Instances.ISAs.VexBridgeCore
 
 set_option autoImplicit false
 set_option relaxedAutoImplicit false
@@ -6,14 +6,10 @@ set_option relaxedAutoImplicit false
 namespace VexISA
 
 @[simp] def execStmt : ConcreteState × TempEnv → Stmt → ConcreteState × TempEnv
-  | (state, temps), .linear (.wrTmp tmp expr) =>
-      (state, temps.write tmp (evalExpr state temps expr))
-  | (state, temps), .linear (.put reg expr) =>
-      (state.write reg (evalExpr state temps expr), temps)
-  | (state, temps), .linear (.store64 addr value) =>
-      ({ state with mem := ByteMem.write64le state.mem (evalExpr state temps addr) (evalExpr state temps value) }, temps)
-  | (state, temps), .branch (.exit _cond _target) =>
-      (state, temps)
+  | cfg, .linear stmt =>
+      execLinearStmt cfg stmt
+  | cfg, .branch stmt =>
+      execBranchContinue cfg stmt
 
 @[simp] def execBlock (block : Block) (input : ConcreteState) : ConcreteState :=
   let (state, _) := block.stmts.foldl execStmt (input, TempEnv.empty)
@@ -30,15 +26,14 @@ general nondeterministic CFG branching. -/
       { { state with rip := fallthrough } }
   | stmt :: stmts, cfg =>
       match stmt with
-      | .linear _ =>
-          execStmtsSuccs fallthrough stmts (execStmt cfg stmt)
-      | .branch (.exit cond target) =>
-          let state := cfg.1
-          let temps := cfg.2
-          if evalCond state temps cond then
-            { { state with rip := target } }
+      | .linear stmt =>
+          execStmtsSuccs fallthrough stmts (execLinearStmt cfg stmt)
+      | .branch stmt =>
+          let bridge := branchStmtBridge stmt
+          if bridge.fires cfg then
+            { bridge.taken cfg }
           else
-            execStmtsSuccs fallthrough stmts cfg
+            execStmtsSuccs fallthrough stmts (bridge.cont cfg)
 
 @[simp] def execBlockSuccs (block : Block) (input : ConcreteState) : Finset ConcreteState :=
   execStmtsSuccs block.next block.stmts (input, TempEnv.empty)

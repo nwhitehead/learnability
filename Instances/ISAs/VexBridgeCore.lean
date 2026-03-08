@@ -47,16 +47,17 @@ structure BranchStmtBridgeCase (stmt : BranchStmt) where
   continue_matches :
     ∀ input concrete ps,
       PartialSummaryMatches input concrete ps →
-      fires concrete = false →
       PartialSummaryMatches input (cont concrete) (lowerContinue ps)
-  taken_pc_implies_parent :
+  taken_pc_iff :
     ∀ ps input,
-      Summary.enabled (lowerTaken ps) input →
-      Summary.enabled { sub := ps.sub, pc := ps.pc } input
-  continue_pc_implies_parent :
+      Summary.enabled (lowerTaken ps) input ↔
+        (Summary.enabled { sub := ps.sub, pc := ps.pc } input ∧
+          evalSymPC input (lowerGuard ps) = true)
+  continue_pc_iff :
     ∀ ps input,
-      Summary.enabled { sub := (lowerContinue ps).sub, pc := (lowerContinue ps).pc } input →
-      Summary.enabled { sub := ps.sub, pc := ps.pc } input
+      Summary.enabled { sub := (lowerContinue ps).sub, pc := (lowerContinue ps).pc } input ↔
+        (Summary.enabled { sub := ps.sub, pc := ps.pc } input ∧
+          evalSymPC input (lowerGuard ps) = false)
 
 private theorem lowerExpr_sound
     (input state : ConcreteState) (temps : TempEnv) (sub : SymSub) (symTemps : SymTempEnv)
@@ -208,24 +209,49 @@ private theorem applySymSub_write (sub : SymSub) (input : ConcreteState) (reg : 
                         simpa [ConcreteState.write] using congrArg (fun st => st.write .rip target) hState.symm
               simpa using hApply
         continue_matches := by
-          intro input concrete ps hMatch _hFires
+          intro input concrete ps hMatch
           simpa [PartialSummaryMatches, BridgeInvariant]
-        taken_pc_implies_parent := by
-          intro ps input hEnabled
-          rw [Summary.enabled, satisfiesSymPC, evalSymPC] at hEnabled
-          have hBoth : evalSymPC input ps.pc = true ∧ evalSymPC input (lowerCond ps.sub ps.temps cond) = true := by
-            simpa [Bool.and_eq_true] using hEnabled
-          simpa [Summary.enabled, satisfiesSymPC] using hBoth.1
-        continue_pc_implies_parent := by
-          intro ps input hEnabled
-          rw [Summary.enabled, satisfiesSymPC, evalSymPC] at hEnabled
-          have hBoth : evalSymPC input ps.pc = true ∧ evalSymPC input (.not (lowerCond ps.sub ps.temps cond)) = true := by
-            simpa [Bool.and_eq_true] using hEnabled
-          simpa [Summary.enabled, satisfiesSymPC] using hBoth.1 }
+        taken_pc_iff := by
+          intro ps input
+          constructor
+          · intro hEnabled
+            rw [Summary.enabled, satisfiesSymPC, evalSymPC] at hEnabled
+            have hBoth : evalSymPC input ps.pc = true ∧
+                evalSymPC input (lowerCond ps.sub ps.temps cond) = true := by
+              simpa [Bool.and_eq_true] using hEnabled
+            exact ⟨by simpa [Summary.enabled, satisfiesSymPC] using hBoth.1, hBoth.2⟩
+          · intro h
+            rcases h with ⟨hParent, hGuard⟩
+            rw [Summary.enabled, satisfiesSymPC] at hParent ⊢
+            simp [evalSymPC, hParent, hGuard]
+        continue_pc_iff := by
+          intro ps input
+          constructor
+          · intro hEnabled
+            rw [Summary.enabled, satisfiesSymPC, evalSymPC] at hEnabled
+            have hBoth : evalSymPC input ps.pc = true ∧
+                evalSymPC input (.not (lowerCond ps.sub ps.temps cond)) = true := by
+              simpa [Bool.and_eq_true] using hEnabled
+            have hGuardFalse : evalSymPC input (lowerCond ps.sub ps.temps cond) = false := by
+              simpa [evalSymPC] using hBoth.2
+            exact ⟨by simpa [Summary.enabled, satisfiesSymPC] using hBoth.1, hGuardFalse⟩
+          · intro h
+            rcases h with ⟨hParent, hGuardFalse⟩
+            rw [Summary.enabled, satisfiesSymPC] at hParent ⊢
+            simp [evalSymPC, hParent, hGuardFalse] }
 
 example :
     (branchStmtBridge (.exit (.eq64 (.get .rcx) (.const 0)) 0x400006)).fires
       ({ rax := 0, rcx := 0, rdi := 0, rip := 0, mem := ByteMem.empty }, TempEnv.empty) = true := by
   native_decide
+
+@[inline] def execBranchContinue (cfg : ConcreteState × TempEnv) (stmt : BranchStmt) :
+    ConcreteState × TempEnv :=
+  (branchStmtBridge stmt).cont cfg
+
+@[inline] def lowerBranchContinue (state : LowerState) (stmt : BranchStmt) : LowerState :=
+  let ps := (branchStmtBridge stmt).lowerContinue
+    { sub := state.1, pc := .true, temps := state.2 }
+  (ps.sub, ps.temps)
 
 end VexISA
