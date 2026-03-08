@@ -675,6 +675,7 @@ Committed follow-up work:
 - `14d3589425b7` `add VEX load64 semantics and lowering`
 - `6e413af7cea2` `add angr-backed VEX load64 fixture generation and example`
 - `3ea5984739b8` `add VEX store64 semantics and lowering`
+- `1fc9db26f2f0` `add angr-backed VEX store64 fixture generation and example`
 
 Current VEX state after those commits:
 
@@ -725,19 +726,23 @@ Reference-validation status:
 - full corpus revalidated after the memory-state rebase
 - added one real `angr`-backed load fixture:
   - `amd64_mov_rax_mem_rdi`
-- store semantics are implemented in Lean, but the `angr`-backed store fixture was not yet finished at this point in the notes
+- added one real `angr`-backed store fixture:
+  - `amd64_mov_mem_rdi_rax`
 
 Build status at this point:
 
 - `lake build` succeeds for the full repository
-- build size at this point: `790 jobs`
+- build size at this point: `792 jobs`
 
-Open edge of the current milestone:
+Current milestone status:
 
-- extend the extractor one step further to decode VEX `Store`
-- generate one `angr`-backed store fixture
-- check that fixture through both:
-  - concrete block execution
-  - lowered symbolic summary application
+- the initial VEX memory milestone is complete
+- both `load64` and `store64` now exist in all three layers:
+  - concrete execution
+  - symbolic lowering to `(σ, φ)`
+  - `angr`-backed reference fixtures
 
-Only after that store fixture lands should this memory milestone be considered complete.
+Natural next step after this milestone:
+
+- decide whether to widen coverage within the current fragment in a separate workspace,
+  or shift back to theory work on convergence objects / normalization / quotients
