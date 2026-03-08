@@ -275,4 +275,31 @@ theorem whileLoopWitnessSound_of_boundedPathBehavior
   refine ⟨hRel, s', ?_, hObs⟩
   exact boundedWhileBehavior_implies_whileBehavior summary K (hpath n s s' hn hPath)
 
+/-- If the guard-free loop branch set stabilizes at `K`, then any concrete while-loop
+    behavior is bounded by `K` iterations. Combined with a bridge showing that bounded
+    while executions are covered by the bounded path-family witness, this discharges the
+    concrete `WhileLoopUnrollBound` obligation. -/
+theorem whileLoopUnrollBound_of_stabilization
+    {Reg : Type} {Obs : Type} [DecidableEq Reg] [Fintype Reg]
+    (program : Program Reg) (ip_reg : Reg)
+    (summary : VexLoopSummary Reg)
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (body : List (Block Reg)) (K : Nat)
+    (h_stab :
+      loopBranchSet (isa := vexSummaryISA Reg) summary K =
+        loopBranchSet (isa := vexSummaryISA Reg) summary (K + 1))
+    (hcover :
+      ∀ s s',
+        boundedWhileBehavior (isa := vexSummaryISA Reg) summary K s s' →
+          ∃ blocks ∈ boundedLoopWitness body K, s' ∈ execBlockPath blocks s) :
+    WhileLoopUnrollBound program ip_reg summary Relevant observe body K := by
+  intro s o hDenotes
+  rcases hDenotes with ⟨hRel, s', hWhile, hObs⟩
+  have hBounded :
+      boundedWhileBehavior (isa := vexSummaryISA Reg) summary K s s' :=
+    stabilization_complete (isa := vexSummaryISA Reg) summary K h_stab s s' hWhile
+  rcases hcover s s' hBounded with ⟨blocks, hMem, hPath⟩
+  exact ⟨blocks, hMem, ⟨hRel, s', hPath, hObs⟩⟩
+
  end VexISA
