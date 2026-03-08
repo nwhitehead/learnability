@@ -1,0 +1,60 @@
+{
+  "name": "amd64_lea_rcx_rdi_plus_5",
+  "arch": "amd64",
+  "base": 4194304,
+  "bytes": [
+    72,
+    141,
+    79,
+    5
+  ],
+  "vex_pretty": "IRSB {\n   t0:Ity_I64 t1:Ity_I64 t2:Ity_I64 t3:Ity_I64\n\n   00 | ------ IMark(0x400000, 4, 0) ------\n   01 | t2 = GET:I64(rdi)\n   02 | t1 = Add64(t2,0x0000000000000005)\n   03 | PUT(rcx) = t1\n   NEXT: PUT(rip) = 0x0000000000400004; Ijk_Boring\n}",
+  "block": {
+    "stmts": [
+      {
+        "tag": "wrtmp",
+        "tmp": 2,
+        "expr": {
+          "tag": "get",
+          "reg": "rdi"
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 1,
+        "expr": {
+          "tag": "add64",
+          "lhs": {
+            "tag": "tmp",
+            "tmp": 2
+          },
+          "rhs": {
+            "tag": "const",
+            "value": 5
+          }
+        }
+      },
+      {
+        "tag": "put",
+        "reg": "rcx",
+        "expr": {
+          "tag": "tmp",
+          "tmp": 1
+        }
+      }
+    ],
+    "next": 4194308
+  },
+  "input": {
+    "rax": 0,
+    "rcx": 0,
+    "rdi": 16,
+    "rip": 4194304
+  },
+  "expected": {
+    "rax": 0,
+    "rcx": 21,
+    "rdi": 16,
+    "rip": 4194308
+  }
+}

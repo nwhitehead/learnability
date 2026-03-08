@@ -1,0 +1,84 @@
+{
+  "name": "amd64_lea_rax_rdi_plus_rcx_plus_8",
+  "arch": "amd64",
+  "base": 4194304,
+  "bytes": [
+    72,
+    141,
+    68,
+    15,
+    8
+  ],
+  "vex_pretty": "IRSB {\n   t0:Ity_I64 t1:Ity_I64 t2:Ity_I64 t3:Ity_I64 t4:Ity_I64 t5:Ity_I64 t6:Ity_I64\n\n   00 | ------ IMark(0x400000, 5, 0) ------\n   01 | t3 = GET:I64(rdi)\n   02 | t5 = GET:I64(rcx)\n   03 | t2 = Add64(t3,t5)\n   04 | t1 = Add64(t2,0x0000000000000008)\n   05 | PUT(rax) = t1\n   NEXT: PUT(rip) = 0x0000000000400005; Ijk_Boring\n}",
+  "block": {
+    "stmts": [
+      {
+        "tag": "wrtmp",
+        "tmp": 3,
+        "expr": {
+          "tag": "get",
+          "reg": "rdi"
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 5,
+        "expr": {
+          "tag": "get",
+          "reg": "rcx"
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 2,
+        "expr": {
+          "tag": "add64",
+          "lhs": {
+            "tag": "tmp",
+            "tmp": 3
+          },
+          "rhs": {
+            "tag": "tmp",
+            "tmp": 5
+          }
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 1,
+        "expr": {
+          "tag": "add64",
+          "lhs": {
+            "tag": "tmp",
+            "tmp": 2
+          },
+          "rhs": {
+            "tag": "const",
+            "value": 8
+          }
+        }
+      },
+      {
+        "tag": "put",
+        "reg": "rax",
+        "expr": {
+          "tag": "tmp",
+          "tmp": 1
+        }
+      }
+    ],
+    "next": 4194309
+  },
+  "input": {
+    "rax": 0,
+    "rcx": 3,
+    "rdi": 16,
+    "rip": 4194304
+  },
+  "expected": {
+    "rax": 27,
+    "rcx": 3,
+    "rdi": 16,
+    "rip": 4194309
+  }
+}

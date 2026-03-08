@@ -1,0 +1,178 @@
+{
+  "fixtures": [
+    {
+      "name": "amd64_lea_rdi_plus_5",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "488d4705",
+      "input_regs": {
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_lea_rax_rdi",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "488d07",
+      "input_regs": {
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_lea_rax_rcx_plus_5",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "488d4105",
+      "input_regs": {
+        "rcx": "0x10"
+      }
+    },
+    {
+      "name": "amd64_lea_rcx_rdi_plus_5",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "488d4f05",
+      "input_regs": {
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_lea_rax_rdi_plus_rcx",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "488d040f",
+      "input_regs": {
+        "rdi": "0x10",
+        "rcx": "0x3"
+      }
+    },
+    {
+      "name": "amd64_lea_rax_rdi_plus_rcx_plus_8",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "488d440f08",
+      "input_regs": {
+        "rdi": "0x10",
+        "rcx": "0x3"
+      }
+    },
+    {
+      "name": "amd64_mov_rcx_rdi",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "4889f9",
+      "input_regs": {
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_mov_rdi_rcx",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "4889cf",
+      "input_regs": {
+        "rcx": "0x10"
+      }
+    },
+    {
+      "name": "amd64_jrcxz_skip_lea_taken",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "e304488d4705",
+      "input_regs": {
+        "rcx": "0x0",
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_jrcxz_skip_lea_fallthrough",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "e304488d4705",
+      "input_regs": {
+        "rcx": "0x1",
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_jrcxz_skip_mov_rax_rdi_taken",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "e3034889f8",
+      "input_regs": {
+        "rcx": "0x0",
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_jrcxz_skip_mov_rax_rdi_fallthrough",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "e3034889f8",
+      "input_regs": {
+        "rcx": "0x1",
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_jrcxz_skip_lea_rcx_rdi_plus_5_taken",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "e304488d4f05",
+      "input_regs": {
+        "rcx": "0x0",
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_jrcxz_skip_lea_rcx_rdi_plus_5_fallthrough",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "e304488d4f05",
+      "input_regs": {
+        "rcx": "0x1",
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_jrcxz_skip_lea_rdi_rdi_plus_8_taken",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "e304488d7f08",
+      "input_regs": {
+        "rcx": "0x0",
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_jrcxz_skip_lea_rdi_rdi_plus_8_fallthrough",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "e304488d7f08",
+      "input_regs": {
+        "rcx": "0x1",
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_jrcxz_skip_lea_rax_rdi_plus_rcx_taken",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "e304488d040f",
+      "input_regs": {
+        "rcx": "0x0",
+        "rdi": "0x10"
+      }
+    },
+    {
+      "name": "amd64_jrcxz_skip_lea_rax_rdi_plus_rcx_fallthrough",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "e304488d040f",
+      "input_regs": {
+        "rcx": "0x3",
+        "rdi": "0x10"
+      }
+    }
+  ]
+}

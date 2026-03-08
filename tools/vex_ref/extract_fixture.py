@@ -16,6 +16,14 @@ DEFAULT_LEAN_FIXTURE = ROOT / "Instances" / "Examples" / "VexLeaRdiPlus5Fixture.
 DEFAULT_LEAN_NAMESPACE = "Instances.Examples.VexLeaRdiPlus5Fixture"
 
 
+def parse_intlike(value: int | str) -> int:
+    if isinstance(value, int):
+        return value
+    if isinstance(value, str):
+        return int(value, 0)
+    raise TypeError(f"unsupported integer literal: {value!r}")
+
+
 def parse_reg_assignment(text: str) -> tuple[str, int]:
     name, value = text.split("=", 1)
     return name, int(value, 0)
@@ -189,6 +197,36 @@ def write_json(fixture: dict) -> Path:
     return out
 
 
+def default_lean_namespace(name: str) -> str:
+    parts = name.split("_")
+    if parts and parts[0].lower() == "amd64":
+        parts = parts[1:]
+    camel = "".join(part.capitalize() for part in parts)
+    return f"Instances.Examples.Vex{camel}Fixture"
+
+
+def lean_namespace_to_path(namespace: str) -> Path:
+    return ROOT.joinpath(*namespace.split(".")).with_suffix(".lean")
+
+
+def resolve_lean_target(
+    name: str,
+    lean_output: str | None,
+    lean_namespace: str | None,
+    *,
+    derive_from_name: bool,
+) -> tuple[Path, str]:
+    if derive_from_name:
+        namespace = lean_namespace or default_lean_namespace(name)
+        path = Path(lean_output) if lean_output else lean_namespace_to_path(namespace)
+    else:
+        namespace = lean_namespace or DEFAULT_LEAN_NAMESPACE
+        path = Path(lean_output) if lean_output else DEFAULT_LEAN_FIXTURE
+    if not path.is_absolute():
+        path = ROOT / path
+    return path, namespace
+
+
 def write_lean(fixture: dict, lean_path: Path, lean_namespace: str) -> Path:
     stmts = ",\n      ".join(lean_stmt(stmt) for stmt in fixture["block"]["stmts"])
     byte_list = ", ".join(f"0x{b:02x}" for b in fixture["bytes"])
@@ -230,24 +268,88 @@ end {lean_namespace}
     return lean_path
 
 
+def emit_fixture(
+    name: str,
+    arch_name: str,
+    base: int,
+    code: bytes,
+    inputs: dict[str, int],
+    *,
+    lean_output: str | None,
+    lean_namespace: str | None,
+    derive_from_name: bool,
+) -> tuple[Path, Path]:
+    fixture = build_fixture(name, arch_name, base, code, inputs)
+    lean_path, resolved_namespace = resolve_lean_target(
+        name,
+        lean_output,
+        lean_namespace,
+        derive_from_name=derive_from_name,
+    )
+    json_path = write_json(fixture)
+    final_lean_path = write_lean(fixture, lean_path, resolved_namespace)
+    return json_path, final_lean_path
+
+
+def load_manifest_specs(manifest_path: Path) -> list[dict]:
+    data = json.loads(manifest_path.read_text())
+    if isinstance(data, list):
+        return data
+    if isinstance(data, dict) and isinstance(data.get("fixtures"), list):
+        return data["fixtures"]
+    raise ValueError("manifest must be a list or an object with a 'fixtures' list")
+
+
 def main() -> None:
     parser = argparse.ArgumentParser()
-    parser.add_argument("--name", required=True)
-    parser.add_argument("--arch", required=True)
-    parser.add_argument("--base", required=True, type=lambda s: int(s, 0))
-    parser.add_argument("--bytes", required=True)
+    mode = parser.add_mutually_exclusive_group(required=True)
+    mode.add_argument("--manifest")
+    mode.add_argument("--name")
+    parser.add_argument("--arch")
+    parser.add_argument("--base", type=lambda s: int(s, 0))
+    parser.add_argument("--bytes")
     parser.add_argument("--input-reg", action="append", default=[])
     parser.add_argument("--lean-output")
     parser.add_argument("--lean-namespace")
     args = parser.parse_args()
 
+    if args.manifest:
+        for spec in load_manifest_specs(Path(args.manifest)):
+            inputs = {reg: parse_intlike(value) for reg, value in spec.get("input_regs", {}).items()}
+            json_path, lean_path = emit_fixture(
+                spec["name"],
+                spec["arch"],
+                parse_intlike(spec["base"]),
+                bytes.fromhex(spec["bytes"]),
+                inputs,
+                lean_output=spec.get("lean_output"),
+                lean_namespace=spec.get("lean_namespace") or spec.get("lean_module"),
+                derive_from_name=True,
+            )
+            print(json_path)
+            print(lean_path)
+        return
+
+    missing = [
+        flag
+        for flag, value in (("--arch", args.arch), ("--base", args.base), ("--bytes", args.bytes))
+        if value is None
+    ]
+    if missing:
+        parser.error(f"{', '.join(missing)} required unless --manifest is used")
+
     code = bytes.fromhex(args.bytes)
     inputs = dict(parse_reg_assignment(item) for item in args.input_reg)
-    fixture = build_fixture(args.name, args.arch, args.base, code, inputs)
-    lean_path = Path(args.lean_output) if args.lean_output else DEFAULT_LEAN_FIXTURE
-    lean_namespace = args.lean_namespace or DEFAULT_LEAN_NAMESPACE
-    json_path = write_json(fixture)
-    lean_path = write_lean(fixture, lean_path, lean_namespace)
+    json_path, lean_path = emit_fixture(
+        args.name,
+        args.arch,
+        args.base,
+        code,
+        inputs,
+        lean_output=args.lean_output,
+        lean_namespace=args.lean_namespace,
+        derive_from_name=False,
+    )
     print(json_path)
     print(lean_path)
 

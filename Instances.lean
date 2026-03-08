@@ -1,4 +1,5 @@
 import Instances.Examples.BranchExample
+import Instances.Examples.VexCorpus
 import Instances.Examples.VexJrcxzSkipLeaExample
 import Instances.Examples.VexJrcxzSkipLeaFallthroughFixture
 import Instances.Examples.VexJrcxzSkipLeaTakenFixture
