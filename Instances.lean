@@ -11,6 +11,8 @@ import Instances.Examples.VexLeaEaxRdiPlus5Fixture
 import Instances.Examples.VexLeaExample
 import Instances.Examples.VexLeaRdiPlus5Fixture
 import Instances.Examples.VexMovEaxEdiExample
+import Instances.Examples.VexMovEcxEdiExample
+import Instances.Examples.VexMovEcxEdiFixture
 import Instances.Examples.VexMovEaxEdiFixture
 import Instances.Examples.VexMovRaxMemRdiExample
 import Instances.Examples.VexMovRaxMemRdiFixture
