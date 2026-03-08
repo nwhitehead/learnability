@@ -10,6 +10,8 @@ mutual
 inductive SymExpr (Reg : Type) where
   | const : UInt64 → SymExpr Reg
   | reg : Reg → SymExpr Reg
+  | low32 : SymExpr Reg → SymExpr Reg
+  | uext32 : SymExpr Reg → SymExpr Reg
   | add64 : SymExpr Reg → SymExpr Reg → SymExpr Reg
   | load64 : SymMem Reg → SymExpr Reg → SymExpr Reg
   deriving DecidableEq, Repr
@@ -117,6 +119,8 @@ mutual
     (state : ConcreteState Reg) : SymExpr Reg → UInt64
   | .const value => value
   | .reg reg => state.read reg
+  | .low32 expr => mask32 (evalSymExpr state expr)
+  | .uext32 expr => mask32 (evalSymExpr state expr)
   | .add64 lhs rhs => evalSymExpr state lhs + evalSymExpr state rhs
   | .load64 mem addr => ByteMem.read64le (evalSymMem state mem) (evalSymExpr state addr)
 
@@ -144,6 +148,8 @@ def substSymExpr {Reg : Type} [DecidableEq Reg] [Fintype Reg]
     (sub : SymSub Reg) : SymExpr Reg → SymExpr Reg
   | .const value => .const value
   | .reg reg => sub.regs reg
+  | .low32 expr => .low32 (substSymExpr sub expr)
+  | .uext32 expr => .uext32 (substSymExpr sub expr)
   | .add64 lhs rhs => .add64 (substSymExpr sub lhs) (substSymExpr sub rhs)
   | .load64 mem addr => .load64 (substSymMem sub mem) (substSymExpr sub addr)
 
@@ -217,6 +223,8 @@ theorem substSymExpr_id {Reg : Type} [DecidableEq Reg] [Fintype Reg] (expr : Sym
   cases expr with
   | const value => rfl
   | reg reg => rfl
+  | low32 expr => simp [substSymExpr, substSymExpr_id]
+  | uext32 expr => simp [substSymExpr, substSymExpr_id]
   | add64 lhs rhs =>
       simp [substSymExpr, substSymExpr_id]
   | load64 mem addr =>
@@ -237,6 +245,8 @@ theorem substSymExpr_compose {Reg : Type} [DecidableEq Reg] [Fintype Reg]
   cases expr with
   | const value => rfl
   | reg reg => rfl
+  | low32 expr => simp [substSymExpr, substSymExpr_compose]
+  | uext32 expr => simp [substSymExpr, substSymExpr_compose]
   | add64 lhs rhs =>
       simp [substSymExpr, substSymExpr_compose]
   | load64 mem addr =>
@@ -258,6 +268,8 @@ theorem evalSymExpr_subst {Reg : Type} [DecidableEq Reg] [Fintype Reg]
   cases expr with
   | const value => rfl
   | reg reg => rfl
+  | low32 expr => simp [substSymExpr, evalSymExpr_subst]
+  | uext32 expr => simp [substSymExpr, evalSymExpr_subst]
   | add64 lhs rhs =>
       simp [substSymExpr, evalSymExpr_subst]
   | load64 mem addr =>

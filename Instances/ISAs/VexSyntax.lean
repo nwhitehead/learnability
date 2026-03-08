@@ -6,6 +6,9 @@ set_option relaxedAutoImplicit false
 
 namespace VexISA
 
+def mask32 (value : UInt64) : UInt64 :=
+  value &&& 0xFFFF_FFFF
+
 abbrev ByteCell := UInt64 × UInt8
 abbrev ByteMem := List ByteCell
 
@@ -46,6 +49,8 @@ inductive Expr (Reg : Type) where
   | const : UInt64 → Expr Reg
   | get : Reg → Expr Reg
   | tmp : Nat → Expr Reg
+  | low32 : Expr Reg → Expr Reg
+  | uext32 : Expr Reg → Expr Reg
   | add64 : Expr Reg → Expr Reg → Expr Reg
   | load64 : Expr Reg → Expr Reg
   deriving DecidableEq, Repr

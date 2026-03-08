@@ -28,6 +28,8 @@ def lowerExpr {Reg : Type} [DecidableEq Reg] [Fintype Reg]
   | .const value => .const value
   | .get reg => sub.regs reg
   | .tmp tmp => temps tmp
+  | .low32 expr => .low32 (lowerExpr sub temps expr)
+  | .uext32 expr => .uext32 (lowerExpr sub temps expr)
   | .add64 lhs rhs => .add64 (lowerExpr sub temps lhs) (lowerExpr sub temps rhs)
   | .load64 addr => .load64 sub.mem (lowerExpr sub temps addr)
 

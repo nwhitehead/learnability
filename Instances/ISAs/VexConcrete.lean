@@ -11,6 +11,8 @@ namespace VexISA
   | .const value => value
   | .get reg => state.read reg
   | .tmp tmp => temps tmp
+  | .low32 expr => mask32 (evalExpr state temps expr)
+  | .uext32 expr => mask32 (evalExpr state temps expr)
   | .add64 lhs rhs => evalExpr state temps lhs + evalExpr state temps rhs
   | .load64 addr => ByteMem.read64le state.mem (evalExpr state temps addr)
 
