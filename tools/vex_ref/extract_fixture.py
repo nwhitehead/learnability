@@ -105,6 +105,14 @@ def stmt_to_data(arch, stmt, tmp_conds):
         return {"tag": "wrtmp", "tmp": stmt.tmp, "expr": expr_to_data(arch, stmt.data)}
     if isinstance(stmt, pyvex.stmt.Put):
         return {"tag": "put", "reg": reg_name(arch, stmt.offset), "expr": expr_to_data(arch, stmt.data)}
+    if isinstance(stmt, pyvex.stmt.Store):
+        if stmt.end != "Iend_LE":
+            raise ValueError(f"unsupported store endness: {stmt.end}")
+        return {
+            "tag": "store64",
+            "addr": expr_to_data(arch, stmt.addr),
+            "value": expr_to_data(arch, stmt.data),
+        }
     if isinstance(stmt, pyvex.stmt.Exit):
         return {
             "tag": "exit",
@@ -135,6 +143,8 @@ def lean_stmt(stmt: dict) -> str:
         return f".wrTmp {stmt['tmp']} ({lean_expr(stmt['expr'])})"
     if tag == "put":
         return f".put .{stmt['reg']} ({lean_expr(stmt['expr'])})"
+    if tag == "store64":
+        return f".store64 ({lean_expr(stmt['addr'])}) ({lean_expr(stmt['value'])})"
     if tag == "exit":
         return f".exit ({lean_cond(stmt['cond'])}) 0x{stmt['target']:x}"
     raise ValueError(f"unsupported lean stmt tag: {tag}")
@@ -215,7 +225,7 @@ def build_fixture(
         ],
     }
     concrete_input = {
-        "rax": 0,
+        "rax": inputs.get("rax", 0),
         "rcx": inputs.get("rcx", 0),
         "rdi": inputs.get("rdi", 0),
         "rip": base,
