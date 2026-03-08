@@ -137,6 +137,11 @@ def TempEnv.write (temps : TempEnv) (tmp : Nat) (value : UInt64) : TempEnv :=
   let (state, _) := block.stmts.foldl execStmt (input, TempEnv.empty)
   { state with rip := block.next }
 
+/-- Ordered concrete successor semantics for the current VEX block slice.
+
+`Exit` short-circuits: the first enabled exit wins and fallthrough is discarded.
+The `Finset` result is for alignment with summary families, not to model
+general nondeterministic CFG branching. -/
 @[simp] def execStmtsSuccs (fallthrough : UInt64) :
     List Stmt → ConcreteState × TempEnv → Finset ConcreteState
   | [], (state, _) =>
