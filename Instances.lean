@@ -12,6 +12,9 @@ import Instances.Examples.VexLeaExample
 import Instances.Examples.VexLeaRdiPlus5Fixture
 import Instances.Examples.VexAddEaxEdiExample
 import Instances.Examples.VexAddEaxEdiFixture
+import Instances.Examples.VexAddEaxEdiJzExample
+import Instances.Examples.VexAddEaxEdiJzTakenFixture
+import Instances.Examples.VexAddEaxEdiJzFallthroughFixture
 import Instances.Examples.VexMovEaxEdiExample
 import Instances.Examples.VexMovEcxEdiExample
 import Instances.Examples.VexMovEcxEdiFixture

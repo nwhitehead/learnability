@@ -96,6 +96,26 @@
       }
     },
     {
+      "name": "amd64_add_eax_edi_jz_taken",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "01f87402",
+      "input_regs": {
+        "rax": "0xffffffffffffffff",
+        "rdi": "0x1"
+      }
+    },
+    {
+      "name": "amd64_add_eax_edi_jz_fallthrough",
+      "arch": "amd64",
+      "base": "0x400000",
+      "bytes": "01f87402",
+      "input_regs": {
+        "rax": "0x100000002",
+        "rdi": "0x3"
+      }
+    },
+    {
       "name": "amd64_mov_rdi_rcx",
       "arch": "amd64",
       "base": "0x400000",

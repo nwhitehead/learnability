@@ -1,0 +1,269 @@
+{
+  "name": "amd64_add_eax_edi_jz_fallthrough",
+  "arch": "amd64",
+  "base": 4194304,
+  "bytes": [
+    1,
+    248,
+    116,
+    2
+  ],
+  "vex_pretty": "IRSB {\n   t0:Ity_I32 t1:Ity_I32 t2:Ity_I32 t3:Ity_I32 t4:Ity_I64 t5:Ity_I32 t6:Ity_I64 t7:Ity_I64 t8:Ity_I64 t9:Ity_I64 t10:Ity_I1 t11:Ity_I64 t12:Ity_I64 t13:Ity_I64 t14:Ity_I64 t15:Ity_I64 t16:Ity_I64 t17:Ity_I32 t18:Ity_I32 t19:Ity_I64 t20:Ity_I64 t21:Ity_I64 t22:Ity_I64 t23:Ity_I1 t24:Ity_I32 t25:Ity_I32 t26:Ity_I32 t27:Ity_I1\n\n   00 | ------ IMark(0x400000, 2, 0) ------\n   01 | t4 = GET:I64(rax)\n   02 | t17 = 64to32(t4)\n   03 | t3 = t17\n   04 | t6 = GET:I64(rdi)\n   05 | t18 = 64to32(t6)\n   06 | t5 = t18\n   07 | t0 = Add32(t3,t5)\n   08 | PUT(cc_op) = 0x0000000000000003\n   09 | t19 = 32Uto64(t3)\n   10 | t7 = t19\n   11 | PUT(cc_dep1) = t7\n   12 | t20 = 32Uto64(t5)\n   13 | t8 = t20\n   14 | PUT(cc_dep2) = t8\n   15 | t21 = 32Uto64(t0)\n   16 | t9 = t21\n   17 | PUT(rax) = t9\n   18 | PUT(rip) = 0x0000000000400002\n   19 | ------ IMark(0x400002, 2, 0) ------\n   20 | t25 = 64to32(t7)\n   21 | t26 = 64to32(t8)\n   22 | t24 = Add32(t25,t26)\n   23 | t23 = CmpEQ32(t24,0x00000000)\n   24 | t22 = 1Uto64(t23)\n   25 | t15 = t22\n   26 | t27 = 64to1(t15)\n   27 | t10 = t27\n   28 | if (t10) { PUT(rip) = 0x400006; Ijk_Boring }\n   NEXT: PUT(rip) = 0x0000000000400004; Ijk_Boring\n}",
+  "block": {
+    "stmts": [
+      {
+        "tag": "wrtmp",
+        "tmp": 4,
+        "expr": {
+          "tag": "get",
+          "reg": "rax"
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 17,
+        "expr": {
+          "tag": "narrow32",
+          "expr": {
+            "tag": "tmp",
+            "tmp": 4
+          }
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 3,
+        "expr": {
+          "tag": "tmp",
+          "tmp": 17
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 6,
+        "expr": {
+          "tag": "get",
+          "reg": "rdi"
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 18,
+        "expr": {
+          "tag": "narrow32",
+          "expr": {
+            "tag": "tmp",
+            "tmp": 6
+          }
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 5,
+        "expr": {
+          "tag": "tmp",
+          "tmp": 18
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 0,
+        "expr": {
+          "tag": "add32",
+          "lhs": {
+            "tag": "tmp",
+            "tmp": 3
+          },
+          "rhs": {
+            "tag": "tmp",
+            "tmp": 5
+          }
+        }
+      },
+      {
+        "tag": "put",
+        "reg": "cc_op",
+        "expr": {
+          "tag": "const",
+          "value": 3
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 19,
+        "expr": {
+          "tag": "zext64",
+          "expr": {
+            "tag": "tmp",
+            "tmp": 3
+          }
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 7,
+        "expr": {
+          "tag": "tmp",
+          "tmp": 19
+        }
+      },
+      {
+        "tag": "put",
+        "reg": "cc_dep1",
+        "expr": {
+          "tag": "tmp",
+          "tmp": 7
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 20,
+        "expr": {
+          "tag": "zext64",
+          "expr": {
+            "tag": "tmp",
+            "tmp": 5
+          }
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 8,
+        "expr": {
+          "tag": "tmp",
+          "tmp": 20
+        }
+      },
+      {
+        "tag": "put",
+        "reg": "cc_dep2",
+        "expr": {
+          "tag": "tmp",
+          "tmp": 8
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 21,
+        "expr": {
+          "tag": "zext64",
+          "expr": {
+            "tag": "tmp",
+            "tmp": 0
+          }
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 9,
+        "expr": {
+          "tag": "tmp",
+          "tmp": 21
+        }
+      },
+      {
+        "tag": "put",
+        "reg": "rax",
+        "expr": {
+          "tag": "tmp",
+          "tmp": 9
+        }
+      },
+      {
+        "tag": "put",
+        "reg": "rip",
+        "expr": {
+          "tag": "const",
+          "value": 4194306
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 25,
+        "expr": {
+          "tag": "narrow32",
+          "expr": {
+            "tag": "tmp",
+            "tmp": 7
+          }
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 26,
+        "expr": {
+          "tag": "narrow32",
+          "expr": {
+            "tag": "tmp",
+            "tmp": 8
+          }
+        }
+      },
+      {
+        "tag": "wrtmp",
+        "tmp": 24,
+        "expr": {
+          "tag": "add32",
+          "lhs": {
+            "tag": "tmp",
+            "tmp": 25
+          },
+          "rhs": {
+            "tag": "tmp",
+            "tmp": 26
+          }
+        }
+      },
+      {
+        "tag": "exit",
+        "cond": {
+          "tag": "eq64",
+          "lhs": {
+            "tag": "zext64",
+            "expr": {
+              "tag": "narrow32",
+              "expr": {
+                "tag": "tmp",
+                "tmp": 24
+              }
+            }
+          },
+          "rhs": {
+            "tag": "zext64",
+            "expr": {
+              "tag": "narrow32",
+              "expr": {
+                "tag": "const",
+                "value": 0
+              }
+            }
+          }
+        },
+        "target": 4194310
+      }
+    ],
+    "next": 4194308
+  },
+  "input": {
+    "rax": 4294967298,
+    "rcx": 0,
+    "rdi": 3,
+    "rip": 4194304,
+    "cc_op": 0,
+    "cc_dep1": 0,
+    "cc_dep2": 0,
+    "cc_ndep": 0,
+    "mem64le": []
+  },
+  "expected": {
+    "rax": 5,
+    "rcx": 0,
+    "rdi": 3,
+    "rip": 4194308,
+    "cc_op": 3,
+    "cc_dep1": 2,
+    "cc_dep2": 3,
+    "cc_ndep": 0,
+    "mem64le": []
+  }
+}

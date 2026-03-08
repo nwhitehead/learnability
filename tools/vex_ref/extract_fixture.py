@@ -87,6 +87,20 @@ def expr_to_data(arch, expr):
 
 def cond_binop_to_data(arch, expr):
     if isinstance(expr, pyvex.expr.Binop):
+        if expr.op == "Iop_CmpEQ32":
+            if len(expr.args) != 2:
+                raise ValueError(f"unexpected arg count for {expr.op}: {len(expr.args)}")
+            return {
+                "tag": "eq64",
+                "lhs": {
+                    "tag": "zext64",
+                    "expr": {"tag": "narrow32", "expr": expr_to_data(arch, expr.args[0])},
+                },
+                "rhs": {
+                    "tag": "zext64",
+                    "expr": {"tag": "narrow32", "expr": expr_to_data(arch, expr.args[1])},
+                },
+            }
         if expr.op != "Iop_CmpEQ64":
             raise ValueError(f"unsupported cond binop: {expr.op}")
         if len(expr.args) != 2:
@@ -116,6 +130,19 @@ def stmt_to_data(arch, stmt, tmp_conds):
         if isinstance(stmt.data, pyvex.expr.Binop) and stmt.data.op == "Iop_CmpEQ64":
             tmp_conds[stmt.tmp] = cond_binop_to_data(arch, stmt.data)
             return None
+        if isinstance(stmt.data, pyvex.expr.Binop) and stmt.data.op == "Iop_CmpEQ32":
+            tmp_conds[stmt.tmp] = cond_binop_to_data(arch, stmt.data)
+            return None
+        if isinstance(stmt.data, pyvex.expr.RdTmp) and stmt.data.tmp in tmp_conds:
+            tmp_conds[stmt.tmp] = tmp_conds[stmt.data.tmp]
+            return None
+        if isinstance(stmt.data, pyvex.expr.Unop) and stmt.data.op in ("Iop_1Uto64", "Iop_64to1"):
+            if len(stmt.data.args) != 1:
+                raise ValueError(f"unexpected arg count for {stmt.data.op}: {len(stmt.data.args)}")
+            arg = stmt.data.args[0]
+            if isinstance(arg, pyvex.expr.RdTmp) and arg.tmp in tmp_conds:
+                tmp_conds[stmt.tmp] = tmp_conds[arg.tmp]
+                return None
         return {"tag": "wrtmp", "tmp": stmt.tmp, "expr": expr_to_data(arch, stmt.data)}
     if isinstance(stmt, pyvex.stmt.Put):
         return {"tag": "put", "reg": reg_name(arch, stmt.offset), "expr": expr_to_data(arch, stmt.data)}
