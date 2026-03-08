@@ -74,6 +74,28 @@ theorem ModelDenotesObs.mono
   rcases h with ⟨hRel, summary, hMem, hEnabled, hObs⟩
   exact ⟨hRel, summary, h_sub hMem, hEnabled, hObs⟩
 
+theorem ModelDenotesObs.union_iff
+    [DecidableEq Summary]
+    (enabled : Summary → State → Prop) (apply : Summary → State → State)
+    (Relevant : State → Prop) (observe : State → Obs)
+    (M N : Finset Summary) (s : State) (o : Obs) :
+    ModelDenotesObs enabled apply Relevant observe (M ∪ N) s o ↔
+      ModelDenotesObs enabled apply Relevant observe M s o ∨
+        ModelDenotesObs enabled apply Relevant observe N s o := by
+  constructor
+  · intro h
+    rcases h with ⟨hRel, summary, hMem, hEnabled, hObs⟩
+    rw [Finset.mem_union] at hMem
+    rcases hMem with hMem | hMem
+    · exact Or.inl ⟨hRel, summary, hMem, hEnabled, hObs⟩
+    · exact Or.inr ⟨hRel, summary, hMem, hEnabled, hObs⟩
+  · intro h
+    rcases h with h | h
+    · rcases h with ⟨hRel, summary, hMem, hEnabled, hObs⟩
+      exact ⟨hRel, summary, Finset.mem_union.mpr (Or.inl hMem), hEnabled, hObs⟩
+    · rcases h with ⟨hRel, summary, hMem, hEnabled, hObs⟩
+      exact ⟨hRel, summary, Finset.mem_union.mpr (Or.inr hMem), hEnabled, hObs⟩
+
 theorem SummaryEq.refl
     [DecidableEq Summary]
     (enabled : Summary → State → Prop) (apply : Summary → State → State)

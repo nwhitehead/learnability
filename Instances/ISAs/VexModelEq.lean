@@ -328,4 +328,99 @@ theorem summaryProgramTraceDenotesState_iff_execProgramTrace
   · rintro ⟨hRel, hTrace⟩
     exact ⟨hRel, sOut, (programStep_rtc_iff_summaryStep_rtc program ip_reg s sOut).mp hTrace, rfl⟩
 
+/-- Flatten a finite family of lifted VEX block paths into one summary family by unioning
+    the lowered summaries of each path. -/
+def lowerPathFamilySummaries
+    {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (paths : Finset (List (Block Reg))) : Finset (Summary Reg) :=
+  paths.biUnion lowerBlockPathSummaries
+
+/-- Observation-level denotation of a finite family of lifted VEX block paths. -/
+def ExecPathFamilyDenotesObs
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (paths : Finset (List (Block Reg)))
+    (s : ConcreteState Reg) (o : Obs) : Prop :=
+  ∃ blocks ∈ paths, ExecBlockPathDenotesObs Relevant observe blocks s o
+
+/-- A finite family of lifted VEX block paths is extractible when the flattened lowered
+    summary family and the concrete path-family denotation induce the same observations. -/
+def ExtractiblePathFamilyModel
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (paths : Finset (List (Block Reg))) : Prop :=
+  ∀ s o,
+    VexModelDenotesObs Relevant observe (lowerPathFamilySummaries paths) s o ↔
+      ExecPathFamilyDenotesObs Relevant observe paths s o
+
+theorem execPathFamilyDenotesObs_insert_iff
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (blocks : List (Block Reg)) (paths : Finset (List (Block Reg)))
+    (s : ConcreteState Reg) (o : Obs) :
+    ExecPathFamilyDenotesObs Relevant observe (insert blocks paths) s o ↔
+      ExecBlockPathDenotesObs Relevant observe blocks s o ∨
+        ExecPathFamilyDenotesObs Relevant observe paths s o := by
+  constructor
+  · rintro ⟨blocks', hMem, hExec⟩
+    rw [Finset.mem_insert] at hMem
+    rcases hMem with rfl | hMem
+    · exact Or.inl hExec
+    · exact Or.inr ⟨blocks', hMem, hExec⟩
+  · intro h
+    rcases h with h | h
+    · exact ⟨blocks, Finset.mem_insert_self _ _, h⟩
+    · rcases h with ⟨blocks', hMem, hExec⟩
+      exact ⟨blocks', Finset.mem_insert.mpr (Or.inr hMem), hExec⟩
+
+/-- Flattened lowered summary families are semantically adequate observation-level models
+    of finite lifted VEX block-path families. -/
+theorem lowerPathFamilySummaries_denotesObs_iff_execPathFamily
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (paths : Finset (List (Block Reg))) :
+    ExtractiblePathFamilyModel Relevant observe paths := by
+  refine Finset.induction_on paths ?base ?step
+  · intro s o
+    constructor
+    · intro h
+      rcases h with ⟨_, summary, hMem, _, _⟩
+      simp [lowerPathFamilySummaries] at hMem
+    · intro h
+      rcases h with ⟨blocks, hMem, _⟩
+      simp at hMem
+  · intro blocks paths hNotMem ih s o
+    rw [lowerPathFamilySummaries, Finset.biUnion_insert]
+    change ModelDenotesObs Summary.enabled Summary.apply Relevant observe
+        (lowerBlockPathSummaries blocks ∪ paths.biUnion lowerBlockPathSummaries) s o ↔
+      ExecPathFamilyDenotesObs Relevant observe (insert blocks paths) s o
+    rw [ModelDenotesObs.union_iff Summary.enabled Summary.apply Relevant observe,
+      execPathFamilyDenotesObs_insert_iff]
+    change VexModelDenotesObs Relevant observe (lowerBlockPathSummaries blocks) s o ∨
+        VexModelDenotesObs Relevant observe (lowerPathFamilySummaries paths) s o ↔
+      ExecBlockPathDenotesObs Relevant observe blocks s o ∨
+        ExecPathFamilyDenotesObs Relevant observe paths s o
+    rw [lowerBlockPathSummaries_denotesObs_iff_execBlockPath]
+    constructor
+    · intro h
+      rcases h with h | h
+      · exact Or.inl h
+      · exact Or.inr ((ih s o).mp h)
+    · intro h
+      rcases h with h | h
+      · exact Or.inl h
+      · exact Or.inr ((ih s o).mpr h)
+
+theorem extractiblePathFamilyModel_union
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (paths₁ paths₂ : Finset (List (Block Reg))) :
+    ExtractiblePathFamilyModel Relevant observe (paths₁ ∪ paths₂) :=
+  lowerPathFamilySummaries_denotesObs_iff_execPathFamily Relevant observe (paths₁ ∪ paths₂)
+
 end VexISA
