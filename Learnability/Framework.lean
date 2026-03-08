@@ -345,7 +345,9 @@ theorem identifiable_of_injective_observe
     {relevant : State → Prop} :
     ∀ (s₁ s₂ : State), relevant s₁ →
       (∀ d, observe s₁ d = observe s₂ d) → s₁ = s₂ :=
-  fun s₁ s₂ _ h_obs => h_inj (funext h_obs)
+by
+  intro s₁ s₂ _ h_obs
+  exact h_inj (funext h_obs)
 
 /-- The indicator observation `fun s d => decide (s = d)` is injective.
 
@@ -828,7 +830,7 @@ noncomputable def LearnabilityPreconditions.refinementSteps
     [DecidableEq Dim] [Fintype Dim] [Inhabited Value]
     (lp : LearnabilityPreconditions State Label Dim Value) : ℕ :=
   (inflationary_stabilizes (refineStep lp.toObservableSystem)
-    (fun X => Finset.subset_union_left) ∅).choose
+    (fun _ => Finset.subset_union_left) ∅).choose
 
 open Classical in
 /-- The fixpoint dimension set discovered by refinement from ∅.
@@ -1019,7 +1021,7 @@ noncomputable def LearnabilityPreconditionsComplete.refinementSteps
     [DecidableEq Dim] [Fintype Dim] [Inhabited Value]
     (lp : LearnabilityPreconditionsComplete State Label Dim Value) : ℕ :=
   (inflationary_stabilizes (refineStepComplete lp.toObservableSystem)
-    (fun X => Finset.subset_union_left) ∅).choose
+    (fun _ => Finset.subset_union_left) ∅).choose
 
 open Classical in
 /-- The fixpoint dimension set from combined refinement. -/
