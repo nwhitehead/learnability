@@ -24,6 +24,7 @@ def lowerExpr (sub : SymSub) (temps : SymTempEnv) : Expr → SymExpr
   | .get reg => sub.regs reg
   | .tmp tmp => temps tmp
   | .add64 lhs rhs => .add64 (lowerExpr sub temps lhs) (lowerExpr sub temps rhs)
+  | .load64 addr => .load64 sub.mem (lowerExpr sub temps addr)
 
 def lowerCond (sub : SymSub) (temps : SymTempEnv) : Cond → SymPC
   | .eq64 lhs rhs => .eq (lowerExpr sub temps lhs) (lowerExpr sub temps rhs)

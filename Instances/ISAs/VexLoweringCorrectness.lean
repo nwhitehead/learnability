@@ -31,6 +31,10 @@ private theorem lowerExpr_sound
   | tmp tmp => simp [lowerExpr, hTemps]
   | add64 lhs rhs ihL ihR =>
       simp [lowerExpr, ihL, ihR]
+  | load64 addr ih =>
+      subst state
+      simpa [evalExpr, lowerExpr] using
+        congrArg (fun value => ByteMem.read64le (applySymSub sub input).mem value) ih
 
 private theorem lowerStmt_sound (input : ConcreteState) (stmt : Stmt)
     (concrete : ConcreteState × TempEnv) (symbolic : LowerState)

@@ -3,6 +3,7 @@ import Instances.Examples.VexCorpus
 import Instances.Examples.VexJrcxzSkipLeaExample
 import Instances.Examples.VexJrcxzSkipLeaFallthroughFixture
 import Instances.Examples.VexJrcxzSkipLeaTakenFixture
+import Instances.Examples.VexLoad64Example
 import Instances.Examples.VexLeaExample
 import Instances.Examples.VexLeaRdiPlus5Fixture
 import Instances.ISAs.MachineISA

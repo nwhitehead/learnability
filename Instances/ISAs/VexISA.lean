@@ -53,6 +53,7 @@ inductive Expr where
   | get : Reg → Expr
   | tmp : Nat → Expr
   | add64 : Expr → Expr → Expr
+  | load64 : Expr → Expr
   deriving DecidableEq, Repr
 
 inductive Cond where
@@ -119,6 +120,7 @@ def TempEnv.write (temps : TempEnv) (tmp : Nat) (value : UInt64) : TempEnv :=
   | .get reg => state.read reg
   | .tmp tmp => temps tmp
   | .add64 lhs rhs => evalExpr state temps lhs + evalExpr state temps rhs
+  | .load64 addr => ByteMem.read64le state.mem (evalExpr state temps addr)
 
 @[simp] def evalCond (state : ConcreteState) (temps : TempEnv) : Cond → Bool
   | .eq64 lhs rhs => evalExpr state temps lhs == evalExpr state temps rhs
