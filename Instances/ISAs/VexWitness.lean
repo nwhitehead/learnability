@@ -139,4 +139,59 @@ theorem extractedLoopModel_of_witnessComplete
           spec.DenotesObs s o :=
   extractedModel_of_witnessComplete (LoopRegion spec) (boundedLoopWitness body K) hcomplete
 
+/-- Soundness half of a bounded loop witness: every path in the witness family denotes
+    a behavior already included in the extensional loop region. -/
+def LoopWitnessSound
+    {Reg : Type} {Obs : Type} [DecidableEq Reg] [Fintype Reg]
+    (spec : LoopRegionSpec Reg Obs)
+    (body : List (Block Reg)) (K : Nat) : Prop :=
+  ∀ s o,
+    ExecPathFamilyDenotesObs spec.Relevant spec.observe
+      (boundedLoopWitness body K) s o →
+        spec.DenotesObs s o
+
+/-- Coverage half of a bounded loop witness: every extensional loop behavior appears in
+    the bounded path-family witness. This is the actual unrolling-bound obligation that
+    later stabilization/finite-state theorems should discharge. -/
+def LoopUnrollBound
+    {Reg : Type} {Obs : Type} [DecidableEq Reg] [Fintype Reg]
+    (spec : LoopRegionSpec Reg Obs)
+    (body : List (Block Reg)) (K : Nat) : Prop :=
+  ∀ s o,
+    spec.DenotesObs s o →
+      ExecPathFamilyDenotesObs spec.Relevant spec.observe
+        (boundedLoopWitness body K) s o
+
+/-- A bounded loop witness is complete exactly when it is both sound and covering for
+    the extensional loop-region behavior. -/
+theorem loopWitnessComplete_of_sound_and_unrollBound
+    {Reg : Type} {Obs : Type} [DecidableEq Reg] [Fintype Reg]
+    (spec : LoopRegionSpec Reg Obs)
+    (body : List (Block Reg)) (K : Nat)
+    (hsound : LoopWitnessSound spec body K)
+    (hbound : LoopUnrollBound spec body K) :
+    LoopWitnessComplete spec body K := by
+  intro s o
+  constructor
+  · exact hsound s o
+  · exact hbound s o
+
+/-- The pair of soundness and coverage assumptions is equivalent to loop witness
+    completeness. -/
+theorem loopWitnessComplete_iff_sound_and_unrollBound
+    {Reg : Type} {Obs : Type} [DecidableEq Reg] [Fintype Reg]
+    (spec : LoopRegionSpec Reg Obs)
+    (body : List (Block Reg)) (K : Nat) :
+    LoopWitnessComplete spec body K ↔
+      LoopWitnessSound spec body K ∧ LoopUnrollBound spec body K := by
+  constructor
+  · intro hcomplete
+    refine ⟨?_, ?_⟩
+    · intro s o hExec
+      exact (hcomplete s o).mp hExec
+    · intro s o hDenotes
+      exact (hcomplete s o).mpr hDenotes
+  · rintro ⟨hsound, hbound⟩
+    exact loopWitnessComplete_of_sound_and_unrollBound spec body K hsound hbound
+
  end VexISA
