@@ -22,6 +22,7 @@
           default = pkgs.mkShell {
             packages = [
               angr-nix.packages.${system}.default
+              pkgs.lean4
               pkgs.uv
               pkgs.jq
             ];
