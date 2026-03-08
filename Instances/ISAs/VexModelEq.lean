@@ -61,6 +61,22 @@ theorem vexModelDenotesObs_iff_summarySuccsDenotesObs
     rcases (mem_summarySuccs summaries s s').1 hMem with ⟨summary, hSummary, hEnabled, hApply⟩
     exact ⟨hRel, summary, hSummary, hEnabled, by simpa [hApply] using hObs⟩
 
+theorem vexModelEq_insert_dead
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop) (observe : ConcreteState Reg → Obs)
+    (M : Finset (Summary Reg)) (b : Summary Reg)
+    (hdead : ∀ s, Relevant s → ¬ Summary.enabled b s) :
+    VexModelEq Relevant observe (insert b M) M :=
+  modelEq_insert_dead Summary.enabled Summary.apply Relevant observe M b hdead
+
+theorem vexModelEqState_implies_vexModelEq
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop) (observe : ConcreteState Reg → Obs)
+    {M N : Finset (Summary Reg)}
+    (h : VexModelEqState Relevant M N) :
+    VexModelEq Relevant observe M N :=
+  modelEqState_implies_modelEq Summary.enabled Summary.apply Relevant observe h
+
 theorem lowerBlockSummaries_denotesObs_iff_execBlock
     {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
     (Relevant : ConcreteState Reg → Prop) (observe : ConcreteState Reg → Obs)
@@ -86,5 +102,23 @@ theorem lowerBlockPathSummaries_denotesObs_iff_execBlockPath
     exact ⟨hRel, s', by simpa [summarySuccs_lowerBlockPathSummaries_eq_execBlockPath blocks s] using hMem, hObs⟩
   · rintro ⟨hRel, s', hMem, hObs⟩
     exact ⟨hRel, s', by simpa [summarySuccs_lowerBlockPathSummaries_eq_execBlockPath blocks s] using hMem, hObs⟩
+
+theorem lowerBlockSummaries_denotesState_iff_execBlock
+    {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (block : Block Reg) (s s' : ConcreteState Reg) :
+    VexModelDenotesObs Relevant (fun state => state) (lowerBlockSummaries block) s s' ↔
+      (Relevant s ∧ s' ∈ execBlockSuccs block s) := by
+  simpa [ExecBlockDenotesObs] using
+    (lowerBlockSummaries_denotesObs_iff_execBlock Relevant (fun state => state) block s s')
+
+theorem lowerBlockPathSummaries_denotesState_iff_execBlockPath
+    {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (blocks : List (Block Reg)) (s s' : ConcreteState Reg) :
+    VexModelDenotesObs Relevant (fun state => state) (lowerBlockPathSummaries blocks) s s' ↔
+      (Relevant s ∧ s' ∈ execBlockPath blocks s) := by
+  simpa [ExecBlockPathDenotesObs] using
+    (lowerBlockPathSummaries_denotesObs_iff_execBlockPath Relevant (fun state => state) blocks s s')
 
 end VexISA
