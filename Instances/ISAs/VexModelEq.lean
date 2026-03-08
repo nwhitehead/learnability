@@ -85,10 +85,10 @@ theorem lowerBlockSummaries_denotesObs_iff_execBlock
       ExecBlockDenotesObs Relevant observe block s o := by
   rw [vexModelDenotesObs_iff_summarySuccsDenotesObs]
   constructor
-  · rintro ⟨hRel, s', hMem, hObs⟩
-    exact ⟨hRel, s', by simpa [summarySuccs_lowerBlockSummaries_eq_execBlockSuccs block s] using hMem, hObs⟩
-  · rintro ⟨hRel, s', hMem, hObs⟩
-    exact ⟨hRel, s', by simpa [summarySuccs_lowerBlockSummaries_eq_execBlockSuccs block s] using hMem, hObs⟩
+  · rintro ⟨hRel, sOut, hMem, hObs⟩
+    exact ⟨hRel, sOut, by simpa [summarySuccs_lowerBlockSummaries_eq_execBlockSuccs block s] using hMem, hObs⟩
+  · rintro ⟨hRel, sOut, hMem, hObs⟩
+    exact ⟨hRel, sOut, by simpa [summarySuccs_lowerBlockSummaries_eq_execBlockSuccs block s] using hMem, hObs⟩
 
 theorem lowerBlockPathSummaries_denotesObs_iff_execBlockPath
     {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
@@ -98,10 +98,10 @@ theorem lowerBlockPathSummaries_denotesObs_iff_execBlockPath
       ExecBlockPathDenotesObs Relevant observe blocks s o := by
   rw [vexModelDenotesObs_iff_summarySuccsDenotesObs]
   constructor
-  · rintro ⟨hRel, s', hMem, hObs⟩
-    exact ⟨hRel, s', by simpa [summarySuccs_lowerBlockPathSummaries_eq_execBlockPath blocks s] using hMem, hObs⟩
-  · rintro ⟨hRel, s', hMem, hObs⟩
-    exact ⟨hRel, s', by simpa [summarySuccs_lowerBlockPathSummaries_eq_execBlockPath blocks s] using hMem, hObs⟩
+  · rintro ⟨hRel, sOut, hMem, hObs⟩
+    exact ⟨hRel, sOut, by simpa [summarySuccs_lowerBlockPathSummaries_eq_execBlockPath blocks s] using hMem, hObs⟩
+  · rintro ⟨hRel, sOut, hMem, hObs⟩
+    exact ⟨hRel, sOut, by simpa [summarySuccs_lowerBlockPathSummaries_eq_execBlockPath blocks s] using hMem, hObs⟩
 
 theorem lowerBlockSummaries_denotesState_iff_execBlock
     {Reg : Type} [DecidableEq Reg] [Fintype Reg]
@@ -187,5 +187,75 @@ theorem extractiblePathModel_compose
       (lowerBlockPathSummaries (blocks₁ ++ blocks₂)) :=
   vexModelEqState_implies_vexModelEq Relevant observe
     (lowerBlockPathSummaries_append_modelEqState Relevant blocks₁ blocks₂)
+
+/-- Observation-level denotation of one concrete fetched-block program step. -/
+def ExecProgramStepDenotesObs
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (program : Program Reg) (ip_reg : Reg)
+    (s : ConcreteState Reg) (o : Obs) : Prop :=
+  Relevant s ∧ ∃ s', ProgramStep program ip_reg s s' ∧ observe s' = o
+
+/-- Observation-level denotation of one lowered-summary fetched-block program step. -/
+def SummaryProgramStepDenotesObs
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (program : Program Reg) (ip_reg : Reg)
+    (s : ConcreteState Reg) (o : Obs) : Prop :=
+  Relevant s ∧ ∃ s', ProgramSummaryStep program ip_reg s s' ∧ observe s' = o
+
+/-- One fetched-block program step is observation-level extractible when the concrete
+    and lowered-summary step relations induce the same observed behavior on all relevant inputs. -/
+def ExtractibleProgramStep
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (program : Program Reg) (ip_reg : Reg) : Prop :=
+  ∀ s o,
+    SummaryProgramStepDenotesObs Relevant observe program ip_reg s o ↔
+      ExecProgramStepDenotesObs Relevant observe program ip_reg s o
+
+theorem summaryProgramStepDenotesObs_iff_execProgramStep
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (program : Program Reg) (ip_reg : Reg)
+    (s : ConcreteState Reg) (o : Obs) :
+    SummaryProgramStepDenotesObs Relevant observe program ip_reg s o ↔
+      ExecProgramStepDenotesObs Relevant observe program ip_reg s o := by
+  constructor
+  · rintro ⟨hRel, sOut, hStep, hObs⟩
+    exact ⟨hRel, sOut, (programStep_iff_summaryStep program ip_reg s sOut).mpr hStep, hObs⟩
+  · rintro ⟨hRel, sOut, hStep, hObs⟩
+    exact ⟨hRel, sOut, (programStep_iff_summaryStep program ip_reg s sOut).mp hStep, hObs⟩
+
+/-- Lowered-summary one-step fetched-block execution is an observation-level adequate
+    model of concrete fetched-block program stepping. -/
+theorem extractibleProgramStep_of_lowering
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (program : Program Reg) (ip_reg : Reg) :
+    ExtractibleProgramStep Relevant observe program ip_reg := by
+  intro s o
+  exact summaryProgramStepDenotesObs_iff_execProgramStep Relevant observe program ip_reg s o
+
+theorem summaryProgramStepDenotesState_iff_execProgramStep
+    {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (program : Program Reg) (ip_reg : Reg)
+    (s sOut : ConcreteState Reg) :
+    SummaryProgramStepDenotesObs Relevant (fun state => state) program ip_reg s sOut ↔
+      (Relevant s ∧ ProgramStep program ip_reg s sOut) := by
+  constructor
+  · rintro ⟨hRel, out, hStep, hEq⟩
+    have hStep' : ProgramStep program ip_reg s out :=
+      (programStep_iff_summaryStep program ip_reg s out).mpr hStep
+    subst hEq
+    exact ⟨hRel, hStep'⟩
+  · rintro ⟨hRel, hStep⟩
+    exact ⟨hRel, sOut, (programStep_iff_summaryStep program ip_reg s sOut).mp hStep, rfl⟩
 
 end VexISA
