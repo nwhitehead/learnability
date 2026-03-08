@@ -121,4 +121,27 @@ theorem lowerBlockPathSummaries_denotesState_iff_execBlockPath
   simpa [ExecBlockPathDenotesObs] using
     (lowerBlockPathSummaries_denotesObs_iff_execBlockPath Relevant (fun state => state) blocks s s')
 
+/-- A fixed lifted VEX block path is extractible as an observation-level model when its
+    lowered summary family and concrete execution induce the same observed behavior on
+    all relevant inputs. -/
+def ExtractiblePathModel
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (blocks : List (Block Reg)) : Prop :=
+  ∀ s o,
+    VexModelDenotesObs Relevant observe (lowerBlockPathSummaries blocks) s o ↔
+      ExecBlockPathDenotesObs Relevant observe blocks s o
+
+/-- Lowered summary families are semantically adequate observation-level models of fixed
+    lifted VEX block paths. -/
+theorem extractiblePathModel_of_lowering
+    {Reg : Type} {Obs : Type*} [DecidableEq Reg] [Fintype Reg]
+    (Relevant : ConcreteState Reg → Prop)
+    (observe : ConcreteState Reg → Obs)
+    (blocks : List (Block Reg)) :
+    ExtractiblePathModel Relevant observe blocks := by
+  intro s o
+  exact lowerBlockPathSummaries_denotesObs_iff_execBlockPath Relevant observe blocks s o
+
 end VexISA
