@@ -23,18 +23,6 @@ private theorem partialInit_matches {Reg : Type} [DecidableEq Reg] [Fintype Reg]
   · intro tmp
     simp [PartialSummary.init, TempEnv.empty, SymTempEnv.empty]
 
-private theorem applySymSub_write {Reg : Type} [DecidableEq Reg] [Fintype Reg]
-    (sub : SymSub Reg) (input : ConcreteState Reg) (reg : Reg) (expr : SymExpr Reg) :
-    applySymSub (SymSub.write sub reg expr) input =
-      (applySymSub sub input).write reg (evalSymExpr input expr) := by
-  apply ConcreteState.ext
-  · funext reg'
-    by_cases h : reg' = reg
-    · subst h
-      simp [applySymSub, SymSub.write, ConcreteState.write]
-    · simp [applySymSub, SymSub.write, ConcreteState.write, h]
-  · rfl
-
 private theorem lowerStmt_sound {Reg : Type} [DecidableEq Reg] [Fintype Reg]
     (input : ConcreteState Reg) (ip_reg : Reg) (stmt : Stmt Reg)
     (concrete : ConcreteState Reg × TempEnv) (symbolic : LowerState Reg)

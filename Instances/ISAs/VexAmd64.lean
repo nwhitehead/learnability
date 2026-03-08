@@ -37,4 +37,8 @@ def mkAmd64State (rax rcx rdi rip : UInt64) (mem : ByteMem) : Amd64ConcreteState
       | .rip => rip
   , mem := mem }
 
+instance : Repr Amd64ConcreteState where
+  reprPrec state _ :=
+    repr (state.read .rax, state.read .rcx, state.read .rdi, state.read .rip, state.mem)
+
 end VexISA

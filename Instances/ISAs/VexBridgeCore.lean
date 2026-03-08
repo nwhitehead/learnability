@@ -105,18 +105,6 @@ private theorem applySymSub_writeMem {Reg : Type} [DecidableEq Reg] [Fintype Reg
     rfl
   · rfl
 
-private theorem applySymSub_write {Reg : Type} [DecidableEq Reg] [Fintype Reg]
-    (sub : SymSub Reg) (input : ConcreteState Reg) (reg : Reg) (expr : SymExpr Reg) :
-    applySymSub (SymSub.write sub reg expr) input =
-      (applySymSub sub input).write reg (evalSymExpr input expr) := by
-  apply ConcreteState.ext
-  · funext reg'
-    by_cases h : reg' = reg
-    · subst h
-      simp [applySymSub, SymSub.write, ConcreteState.write]
-    · simp [applySymSub, SymSub.write, ConcreteState.write, h]
-  · rfl
-
 @[inline] def linearStmtBridge {Reg : Type} [DecidableEq Reg] [Fintype Reg] :
     (stmt : LinearStmt Reg) → LinearStmtBridgeCase stmt
   | .wrTmp tmp expr =>
