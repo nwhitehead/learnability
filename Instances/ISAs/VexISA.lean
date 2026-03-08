@@ -63,6 +63,7 @@ inductive Cond where
 inductive Stmt where
   | wrTmp : Nat → Expr → Stmt
   | put : Reg → Expr → Stmt
+  | store64 : Expr → Expr → Stmt
   | exit : Cond → UInt64 → Stmt
   deriving DecidableEq, Repr
 
@@ -128,6 +129,8 @@ def TempEnv.write (temps : TempEnv) (tmp : Nat) (value : UInt64) : TempEnv :=
 @[simp] def execStmt : ConcreteState × TempEnv → Stmt → ConcreteState × TempEnv
   | (state, temps), .wrTmp tmp expr => (state, temps.write tmp (evalExpr state temps expr))
   | (state, temps), .put reg expr => (state.write reg (evalExpr state temps expr), temps)
+  | (state, temps), .store64 addr value =>
+      ({ state with mem := ByteMem.write64le state.mem (evalExpr state temps addr) (evalExpr state temps value) }, temps)
   | (state, temps), .exit _cond _target => (state, temps)
 
 @[simp] def execBlock (block : Block) (input : ConcreteState) : ConcreteState :=
@@ -143,6 +146,8 @@ def TempEnv.write (temps : TempEnv) (tmp : Nat) (value : UInt64) : TempEnv :=
       | .wrTmp _ _ =>
           execStmtsSuccs fallthrough stmts (execStmt cfg stmt)
       | .put _ _ =>
+          execStmtsSuccs fallthrough stmts (execStmt cfg stmt)
+      | .store64 _ _ =>
           execStmtsSuccs fallthrough stmts (execStmt cfg stmt)
       | .exit cond target =>
           let state := cfg.1

@@ -8,6 +8,7 @@ import Instances.Examples.VexLeaExample
 import Instances.Examples.VexLeaRdiPlus5Fixture
 import Instances.Examples.VexMovRaxMemRdiExample
 import Instances.Examples.VexMovRaxMemRdiFixture
+import Instances.Examples.VexStore64Example
 import Instances.ISAs.MachineISA
 import Instances.ISAs.VexISA
 import Instances.ISAs.VexSummary

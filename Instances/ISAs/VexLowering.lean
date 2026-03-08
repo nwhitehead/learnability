@@ -37,6 +37,8 @@ def lowerStmt : LowerState → Stmt → LowerState
       (sub, SymTempEnv.write temps tmp (lowerExpr sub temps expr))
   | (sub, temps), .put reg expr =>
       (SymSub.write sub reg (lowerExpr sub temps expr), temps)
+  | (sub, temps), .store64 addr value =>
+      (SymSub.writeMem sub (.store64 sub.mem (lowerExpr sub temps addr) (lowerExpr sub temps value)), temps)
   | (sub, temps), .exit _cond _target =>
       (sub, temps)
 
@@ -63,6 +65,11 @@ def lowerSummariesFrom (ps : PartialSummary) : List Stmt → UInt64 → List Sum
   | .put reg expr :: stmts, next =>
       lowerSummariesFrom
         { ps with sub := SymSub.write ps.sub reg (lowerExpr ps.sub ps.temps expr) }
+        stmts next
+  | .store64 addr value :: stmts, next =>
+      let mem := SymMem.store64 ps.sub.mem (lowerExpr ps.sub ps.temps addr) (lowerExpr ps.sub ps.temps value)
+      lowerSummariesFrom
+        { ps with sub := SymSub.writeMem ps.sub mem }
         stmts next
   | .exit cond target :: stmts, next =>
       let φ := lowerCond ps.sub ps.temps cond
