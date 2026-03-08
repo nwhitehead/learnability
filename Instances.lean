@@ -38,4 +38,5 @@ import Instances.ISAs.VexBridgeCore
 import Instances.ISAs.VexLowering
 import Instances.ISAs.VexLoweringCorrectness
 import Instances.ISAs.VexBridge
+import Instances.ISAs.VexProgram
 import Instances.ISAs.VexSummaryISA
