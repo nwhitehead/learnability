@@ -1,6 +1,7 @@
 import Instances.ISAs.VexModelEq
 import Instances.ISAs.VexSummaryISA
 import SymExec.CircularCoinduction
+import SymExec.Refinement
 
 set_option autoImplicit false
 set_option relaxedAutoImplicit false
@@ -9,6 +10,26 @@ namespace VexISA
 
 abbrev VexLoopSummary (Reg : Type) [DecidableEq Reg] [Fintype Reg] :=
   LoopSummary (SymSub Reg) (SymPC Reg) (ConcreteState Reg) (vexSummaryISA Reg)
+
+/-- Body determinism for a VEX loop summary: one concrete input state yields at most
+    one concrete successor through the loop body. -/
+def BodyDeterministic
+    {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (loop : VexLoopSummary Reg) : Prop :=
+  ∀ s s₁ s₂,
+    CompTree.treeBehavior (vexSummaryISA Reg) loop.body s s₁ →
+    CompTree.treeBehavior (vexSummaryISA Reg) loop.body s s₂ →
+    s₁ = s₂
+
+/-- The built-in `bodyEffect_spec` field already proves body determinism. -/
+theorem bodyDeterministic_of_bodyEffect_spec
+    {Reg : Type} [DecidableEq Reg] [Fintype Reg]
+    (loop : VexLoopSummary Reg) :
+    BodyDeterministic loop := by
+  intro s s₁ s₂ h₁ h₂
+  have hs₁ : s₁ = loop.bodyEffect s := (loop.bodyEffect_spec s s₁).mp h₁
+  have hs₂ : s₂ = loop.bodyEffect s := (loop.bodyEffect_spec s s₂).mp h₂
+  rw [hs₁, hs₂]
 
 /-- An extensional subsystem region: just the relevant inputs, the observable projection,
     and the observed behavior the subsystem is meant to denote. -/
@@ -760,6 +781,47 @@ theorem vexBodyQuotient_card_bound
   abstractStateWith_card_bound (vexSummaryISA Reg) closure
 
 end BodyQuotientBridge
+
+section BodyRefinementBridge
+
+variable {Reg : Type}
+variable [DecidableEq Reg] [Fintype Reg]
+variable [∀ (s : ConcreteState Reg) (φ : SymPC Reg),
+  Decidable ((vexSummaryISA Reg).satisfies s φ)]
+
+/-- The VEX body transition has a finite cross-bisimilar quotient under semantic closure.
+
+    This is the semantic-closure refinement variant of `vexBodyQuotientBisimulation`:
+    `SemClosed` replaces syntactic `h_closed`, avoiding unsatisfiable closure obligations
+    for symbolic PC languages such as `SymPC`. -/
+theorem vexBodyRefinementBisimulation
+    (loop : VexLoopSummary Reg)
+    (bodyPaths : Finset (List (Block Reg)))
+    (closure : Finset (SymPC Reg))
+    (h_contains : ∀ b ∈ bodyBranchModel bodyPaths, b.pc ∈ closure)
+    (h_semClosed : SemClosed (vexSummaryISA Reg) (bodyBranchModel bodyPaths) closure)
+    (hstep : BodyPathStepRealizable loop bodyPaths closure)
+    (h_sound : BranchModel.Sound (vexSummaryISA Reg)
+      (↑(bodyBranchModel bodyPaths) : Set (Branch (SymSub Reg) (SymPC Reg)))
+      (fun s s' => s' = loop.bodyEffect s)) :
+    CrossBisimulation
+      (Quotient.mk (pcSetoidWith (vexSummaryISA Reg) closure))
+      (fun s s' => s' = loop.bodyEffect s)
+      (abstractBehaviorWith (vexSummaryISA Reg) (bodyBranchModel bodyPaths) closure) :=
+  quotient_bisimulationSem (vexSummaryISA Reg)
+    (bodyBranchModel bodyPaths) closure h_contains h_semClosed
+    (fun s s' => s' = loop.bodyEffect s) h_sound
+    (bodyEffect_branchComplete loop bodyPaths closure hstep)
+
+/-- The semantic-closure refinement bridge has the same abstract-state cardinality
+    bound as the quotient bridge, since both use the same quotient carrier. -/
+theorem vexBodyRefinement_card_bound
+    (closure : Finset (SymPC Reg)) :
+    Fintype.card (Quotient (pcSetoidWith (vexSummaryISA Reg) closure)) ≤
+      2 ^ closure.card :=
+  abstractStateWith_card_bound (vexSummaryISA Reg) closure
+
+end BodyRefinementBridge
 
 /-- For the concrete while-based loop region, witness soundness follows once every
     repeated body path up to the bound denotes a bounded while execution. This is the
