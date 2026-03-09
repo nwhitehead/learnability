@@ -176,7 +176,22 @@ what we already have.
 
 ## Plan
 
-1. **Now**: Option A. Direct one-step body STS1. ~60-80 lines.
+0. **Rebase %43 into default** (PREREQUISITE). The `learnability-pc-convergence`
+   workspace has 3 commits ahead of the fork point (`8a272beb`):
+   - `870ea1f4` generalize quotient congruence over explicit closures
+   - `d0f2dad0` rewire branching witness compression to explicit closures
+   - (empty working copy `5c42cc0b`)
+
+   The `default` branch also has 3 commits from that same fork point:
+   - `6ba3dc7c` derive loop witness coverage from body-effect path realizability
+   - `30d3a23c` document remaining deterministic loop witness gap
+   - `d9281198` document STS1 formalization plan
+
+   Both branches modify `VexWitness.lean` — conflict resolution needed.
+   The %43 work (explicit closures, `pcSetoidWith`, `...With` congruence
+   theorems) is a hard prerequisite for Option A.
+
+1. **Option A**: Direct one-step body STS1. ~60-80 lines.
 2. **Checkpoint**: verify it compiles, review with Codex.
 3. **Later**: Option C as the paper-level framework. Depends on whether
    the workshop submission needs it or whether citing HMR05 suffices.
