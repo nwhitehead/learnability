@@ -26,6 +26,7 @@ def evalAmd64CalculateConditionZero
   | .zext64 expr => mask32 (evalExpr state temps expr)
   | .add32 lhs rhs => mask32 (evalExpr state temps lhs + evalExpr state temps rhs)
   | .add64 lhs rhs => evalExpr state temps lhs + evalExpr state temps rhs
+  | .sub64 lhs rhs => evalExpr state temps lhs - evalExpr state temps rhs
   | .load64 addr => ByteMem.read64le state.mem (evalExpr state temps addr)
 
 @[simp] def evalCond {Reg : Type} [DecidableEq Reg] [Fintype Reg]

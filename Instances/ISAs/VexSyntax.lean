@@ -53,6 +53,7 @@ inductive Expr (Reg : Type) where
   | zext64 : Expr Reg → Expr Reg
   | add32 : Expr Reg → Expr Reg → Expr Reg
   | add64 : Expr Reg → Expr Reg → Expr Reg
+  | sub64 : Expr Reg → Expr Reg → Expr Reg
   | load64 : Expr Reg → Expr Reg
   deriving DecidableEq, Repr
 
