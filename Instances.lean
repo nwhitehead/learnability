@@ -30,6 +30,7 @@ import Instances.Examples.VexStore64Example
 import Instances.Examples.Tier0Increment
 import Instances.Examples.Tier1Branch
 import Instances.Examples.Tier2MemBranch
+import Instances.Examples.Tier3Dispatch
 import Instances.ISAs.MachineISA
 import Instances.ISAs.VexAmd64
 import Instances.ISAs.VexSyntax
