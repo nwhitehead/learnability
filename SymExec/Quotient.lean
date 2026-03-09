@@ -668,3 +668,62 @@ theorem quotientBisimulation
     abstractState_card_bound oracle.isa (oracleSequence oracle n)⟩
 
 end EndToEnd
+
+
+/-! ## Step 4e': End-to-End Theorem with Explicit Closures
+
+Combining Phase 2 convergence with Phase 4 explicit-closure quotient bisimulation:
+a productive, target-bounded oracle with a complete target converges to
+a model whose quotient over an explicit closure is a finite abstract system
+cross-bisimilar to the concrete system. -/
+
+section EndToEndWith
+
+variable {Sub PC State : Type*} [DecidableEq Sub] [DecidableEq PC]
+
+/-- End-to-end with explicit closures: oracle convergence yields a finite
+    quotient bisimulation over a chosen closure.
+
+    Given a productive, target-bounded oracle with a complete target, plus an
+    explicit closure containing all target PCs and closed under lifting through
+    target substitutions:
+    1. The oracle converges to a sound and complete model (Phase 2)
+    2. The quotient by explicit PC-equivalence is cross-bisimilar (Phase 4c')
+    3. The abstract state space has at most `2^|closure|` states
+
+    This yields an STS1-style finite cross-bisimilar quotient without requiring
+    `[Fintype PC]`. -/
+theorem quotientBisimulationWith
+    (oracle : BranchOracle Sub PC State)
+    [h_dec : ∀ (s : State) (φ : PC), Decidable (oracle.isa.satisfies s φ)]
+    (target : Finset (Branch Sub PC))
+    (closure : Finset PC)
+    (h_contains : ∀ b ∈ target, b.pc ∈ closure)
+    (h_closed : ∀ b ∈ target, ∀ φ ∈ closure, oracle.isa.pc_lift b.sub φ ∈ closure)
+    (h_productive : oracle.Productive target)
+    (h_bounded : oracle.TargetBounded target)
+    (h_target_complete : BranchModel.Complete oracle.isa
+      (↑target : Set (Branch Sub PC)) oracle.behavior) :
+    ∃ n, n ≤ target.card ∧
+      CrossBisimulation
+        (Quotient.mk (pcSetoidWith oracle.isa closure))
+        oracle.behavior
+        (abstractBehaviorWith oracle.isa (oracleSequence oracle n) closure) ∧
+      Fintype.card (Quotient (pcSetoidWith oracle.isa closure)) ≤
+        2 ^ closure.card := by
+  obtain ⟨n, h_le, h_sound, h_complete⟩ :=
+    branchAccumulation_sound_and_complete oracle target h_productive h_bounded h_target_complete
+  have h_sub := oracleSequence_bounded oracle target h_bounded n
+  have h_contains_n : ∀ b ∈ oracleSequence oracle n, b.pc ∈ closure := by
+    intro b hb
+    exact h_contains b (h_sub hb)
+  have h_closed_n :
+      ∀ b ∈ oracleSequence oracle n, ∀ φ ∈ closure, oracle.isa.pc_lift b.sub φ ∈ closure := by
+    intro b hb φ hφ
+    exact h_closed b (h_sub hb) φ hφ
+  exact ⟨n, h_le,
+    quotient_bisimulationWith oracle.isa (oracleSequence oracle n) closure
+      h_contains_n h_closed_n oracle.behavior h_sound h_complete,
+    abstractStateWith_card_bound oracle.isa closure⟩
+
+end EndToEndWith
