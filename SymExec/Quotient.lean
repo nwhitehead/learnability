@@ -530,10 +530,15 @@ end FinitenessWith
 The abstract transition system and cross-system bisimulation generalized
 to work with an explicit finite closure, without requiring `[Fintype PC]`.
 
-This is the STS1 result (HMR05 Theorem 1A): a sound and complete branch
-model induces a finite abstract transition system that is cross-bisimilar
-to the concrete system. The abstract state space has at most 2^|closure|
-states (by `abstractStateWith_card_bound`).
+A sound and complete branch model induces a finite abstract transition
+system that is cross-bisimilar to the concrete system. The abstract state
+space has at most 2^|closure| states (by `abstractStateWith_card_bound`,
+which additionally requires decidable `satisfies`).
+
+This gives an STS1-style result (cf. HMR05 Theorem 1A): a finite
+cross-bisimilar quotient. Note: this is not a proof that the quotient
+relation is the coarsest bisimulation — it proves the existence of
+a sufficiently fine finite bisimulation.
 
 The closure hypotheses (`h_contains`, `h_closed`) replace the global
 `[Fintype PC]` requirement. They say: model PCs lie in the closure, and
@@ -601,9 +606,11 @@ theorem quotient_backwardWith (model : Finset (Branch Sub PC)) (closure : Finset
 
 /-- The quotient map is a cross-system bisimulation over an explicit closure.
 
-    Combined with `abstractStateWith_card_bound`, this is the STS1 result
-    (HMR05 Theorem 1A): the concrete transition system has a finite
-    bisimilarity quotient with at most 2^|closure| states. -/
+    Combined with `abstractStateWith_card_bound` (which additionally requires
+    decidable `satisfies`), this gives the STS1-style result: a finite abstract
+    transition system, cross-bisimilar to the concrete system, with at most
+    2^|closure| states. Note: this proves the existence of a finite cross-bisimilar
+    quotient, not that it is the coarsest bisimulation quotient. -/
 theorem quotient_bisimulationWith (model : Finset (Branch Sub PC)) (closure : Finset PC)
     (h_contains : ∀ b ∈ model, b.pc ∈ closure)
     (h_closed : ∀ b ∈ model, ∀ φ ∈ closure, isa.pc_lift b.sub φ ∈ closure)
