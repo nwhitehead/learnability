@@ -1,7 +1,6 @@
 name = "learnability"
 version = "0.1.0"
 keywords = ["math"]
-packagesDir = "/Users/heartpunk/.lake-shared/packages"
 defaultTargets = ["LTS", "ConditionalSimulation", "Convergence", "Learnability", "CoinductiveBisimulation", "LearnabilityConvergence", "SymbolicISA", "Branch", "Bisimulation", "Quotient", "BranchExample", "MachineISA", "BranchConvergence", "Composition", "ProgramStructure", "EffectiveObservability", "CircularCoinduction", "ModelEq", "Instances"]
 
 [leanOptions]
