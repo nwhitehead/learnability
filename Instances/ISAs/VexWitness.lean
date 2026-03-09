@@ -677,6 +677,90 @@ theorem whileBranchingLoopWitnessComplete_of_branchClassesStable
 
 end BranchClassCompression
 
+
+/-! ## Bridge to Quotient Bisimulation (STS1)
+
+Connect the VEX witness layer to the general quotient bisimulation framework
+from `SymExec/Quotient.lean`. The key bridge: `BodyPathStepRealizable` implies
+`BranchModel.Complete` for the body sub-model. -/
+
+section BodyQuotientBridge
+
+variable {Reg : Type}
+variable [DecidableEq Reg] [Fintype Reg]
+variable [∀ (s : ConcreteState Reg) (φ : SymPC Reg),
+  Decidable ((vexSummaryISA Reg).satisfies s φ)]
+
+/-- The body-only sub-model: summaries from body paths, without loop guards. -/
+def bodyBranchModel
+    (bodyPaths : Finset (List (Block Reg))) :
+    Finset (Branch (SymSub Reg) (SymPC Reg)) :=
+  (lowerPathFamilySummaries bodyPaths).image summaryAsBranch
+
+set_option linter.unusedSectionVars false in
+theorem bodyBranchModel_sub_branchingLoopModel
+    (loop : VexLoopSummary Reg)
+    (bodyPaths : Finset (List (Block Reg))) :
+    bodyBranchModel bodyPaths ⊆ branchingLoopModel loop bodyPaths :=
+  fun _ hb => Finset.mem_union.mpr (Or.inl hb)
+
+/-- `BodyPathStepRealizable` implies `BranchModel.Complete` for the bodyEffect
+    transition over the body sub-model. This bridges the witness layer into the
+    general quotient bisimulation framework from Quotient.lean. -/
+theorem bodyEffect_branchComplete
+    (loop : VexLoopSummary Reg)
+    (bodyPaths : Finset (List (Block Reg)))
+    (closure : Finset (SymPC Reg))
+    (hstep : BodyPathStepRealizable loop bodyPaths closure) :
+    BranchModel.Complete (vexSummaryISA Reg)
+      (↑(bodyBranchModel bodyPaths) : Set (Branch (SymSub Reg) (SymPC Reg)))
+      (fun s s' => s' = loop.bodyEffect s) := by
+  intro s s' hs'
+  obtain ⟨cls, ⟨hpath, hsummary, henabled, _⟩, happly, _⟩ := hstep s
+  refine ⟨summaryAsBranch cls.summary,
+    Finset.mem_coe.mpr (Finset.mem_image.mpr ⟨cls.summary,
+      Finset.mem_biUnion.mpr ⟨cls.path, hpath, hsummary⟩, rfl⟩),
+    henabled, ?_⟩
+  subst hs'; exact happly
+
+/-- The VEX body transition has a finite bisimilarity quotient (STS1).
+
+    Given:
+    - A body sub-model that is sound for bodyEffect (every fired branch computes bodyEffect)
+    - `BodyPathStepRealizable` (completeness: every body step has a branch witness)
+    - Closure properties (model PCs in closure, closure closed under lifting)
+
+    The quotient by PC-equivalence is a cross-system bisimulation with at most
+    2^|closure| abstract states. This is HMR05 Theorem 1A for the VEX body. -/
+theorem vexBodyQuotientBisimulation
+    (loop : VexLoopSummary Reg)
+    (bodyPaths : Finset (List (Block Reg)))
+    (closure : Finset (SymPC Reg))
+    (h_contains : ∀ b ∈ bodyBranchModel bodyPaths, b.pc ∈ closure)
+    (h_closed : ∀ b ∈ bodyBranchModel bodyPaths, ∀ φ ∈ closure,
+      (vexSummaryISA Reg).pc_lift b.sub φ ∈ closure)
+    (hstep : BodyPathStepRealizable loop bodyPaths closure)
+    (h_sound : BranchModel.Sound (vexSummaryISA Reg)
+      (↑(bodyBranchModel bodyPaths) : Set (Branch (SymSub Reg) (SymPC Reg)))
+      (fun s s' => s' = loop.bodyEffect s)) :
+    CrossBisimulation
+      (Quotient.mk (pcSetoidWith (vexSummaryISA Reg) closure))
+      (fun s s' => s' = loop.bodyEffect s)
+      (abstractBehaviorWith (vexSummaryISA Reg) (bodyBranchModel bodyPaths) closure) :=
+  quotient_bisimulationWith (vexSummaryISA Reg)
+    (bodyBranchModel bodyPaths) closure h_contains h_closed
+    (fun s s' => s' = loop.bodyEffect s) h_sound
+    (bodyEffect_branchComplete loop bodyPaths closure hstep)
+
+/-- The VEX body quotient has at most 2^|closure| abstract states. -/
+theorem vexBodyQuotient_card_bound
+    (closure : Finset (SymPC Reg)) :
+    Fintype.card (Quotient (pcSetoidWith (vexSummaryISA Reg) closure)) ≤
+      2 ^ closure.card :=
+  abstractStateWith_card_bound (vexSummaryISA Reg) closure
+
+end BodyQuotientBridge
+
 /-- For the concrete while-based loop region, witness soundness follows once every
     repeated body path up to the bound denotes a bounded while execution. This is the
     easy direction: bounded witness behaviors are real loop behaviors. -/
